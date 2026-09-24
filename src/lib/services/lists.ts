@@ -6,6 +6,7 @@ import type { StoreId } from "@/db/schema";
 import { buildShoppingList, type ProductInfo } from "../domain/list-builder";
 import { todayHelsinki } from "../domain/offers";
 import { toSectionKey } from "../domain/sections";
+import { packsNeeded } from "../domain/packs";
 import { getPlan } from "./plans";
 import { getRecipes } from "./recipes";
 import { getStaples, normalizeMany } from "./vocab";
@@ -346,4 +347,29 @@ export async function exportSMarket(listId: string) {
     items,
     unmapped_ingredients: unmapped,
   };
+}
+
+/** After (re)mapping an ingredient, update S-market items on existing lists: product, packs, price. */
+export async function applyMappingToLists(nameFi: string, productId: string | null) {
+  const db = await getDb();
+  const items = await db
+    .select()
+    .from(schema.shoppingItems)
+    .where(and(eq(schema.shoppingItems.nameFi, nameFi), eq(schema.shoppingItems.storeId, "smarket")));
+  if (!items.length) return;
+  const [p] = productId ? await db.select().from(schema.products).where(eq(schema.products.id, productId)) : [];
+  const touched = new Set<string>();
+  for (const it of items) {
+    await db
+      .update(schema.shoppingItems)
+      .set({
+        productId: p?.id ?? null,
+        packs: p ? packsNeeded(it.quantity, it.unit, p.packSize, p.packUnit) : null,
+        price: p?.price ?? null,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.shoppingItems.id, it.id));
+    touched.add(it.listId);
+  }
+  for (const id of touched) await bump(id);
 }

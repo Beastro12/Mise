@@ -8,6 +8,12 @@ import { addManualOffer, deleteExpiredOffers, deleteOffer, importOffersFromImage
 import { deleteSynonym, upsertSynonym } from "@/lib/services/vocab";
 import { clearMapping, createManualProduct, setMapping } from "@/lib/services/products";
 import { describeAiError } from "@/lib/ai/client";
+import { applyMappingToLists } from "@/lib/services/lists";
+import { redirect } from "next/navigation";
+
+function safeReturn(v: string): string | null {
+  return v.startsWith("/") && !v.startsWith("//") ? v : null;
+}
 
 const str = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
 const num = (f: FormData, k: string) => {
@@ -133,13 +139,19 @@ export async function deleteSynonymAction(formData: FormData) {
 
 export async function mapProductAction(formData: FormData) {
   await requireAuth();
-  await setMapping(str(formData, "nameFi"), store(str(formData, "storeId")), str(formData, "productId"));
+  const nameFi = str(formData, "nameFi");
+  await setMapping(nameFi, store(str(formData, "storeId")), str(formData, "productId"));
+  await applyMappingToLists(nameFi, str(formData, "productId"));
   revalidatePath("/products");
+  const back = safeReturn(str(formData, "return"));
+  if (back) redirect(back);
 }
 
 export async function clearMappingAction(formData: FormData) {
   await requireAuth();
-  await clearMapping(str(formData, "nameFi"), store(str(formData, "storeId")));
+  const nameFi = str(formData, "nameFi");
+  await clearMapping(nameFi, store(str(formData, "storeId")));
+  await applyMappingToLists(nameFi, null);
   revalidatePath("/products");
 }
 
@@ -159,6 +171,11 @@ export async function manualProductAction(formData: FormData) {
     unitPriceUnit: str(formData, "unitPriceUnit") || null,
   });
   const nameFi = str(formData, "nameFi");
-  if (nameFi) await setMapping(nameFi, "smarket", p.id);
+  if (nameFi) {
+    await setMapping(nameFi, "smarket", p.id);
+    await applyMappingToLists(nameFi, p.id);
+  }
   revalidatePath("/products");
+  const back = safeReturn(str(formData, "return"));
+  if (back) redirect(back);
 }
