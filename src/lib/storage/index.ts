@@ -15,6 +15,7 @@ class LocalBlobStore implements BlobStore {
     return path.join(this.root, safe);
   }
   async put(key: string, data: Buffer) {
+    if (process.env.VERCEL) throw new Error("File uploads on Vercel need BLOB_STORE=supabase (the local disk is not persistent).");
     const f = this.file(key);
     await fs.mkdir(path.dirname(f), { recursive: true });
     await fs.writeFile(f, data);

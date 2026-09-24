@@ -6,6 +6,8 @@ import { OffersImport } from "@/components/offers-import";
 import { Badge, Button, Card, Empty, Field, PageTitle, Section, btn, cx, inputCls } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
+// Claude extraction of several pages can take a while (server actions inherit this).
+export const maxDuration = 300;
 
 const fmt = (d: string) => {
   const [, m, day] = d.split("-").map(Number);

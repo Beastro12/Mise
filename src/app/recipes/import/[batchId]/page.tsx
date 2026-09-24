@@ -4,6 +4,8 @@ import { RecipeEditor } from "@/components/recipe-editor";
 import { LinkButton, Notice, PageTitle } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
+// Claude extraction of several pages can take a while (server actions inherit this).
+export const maxDuration = 300;
 
 export default async function ReviewPage(props: PageProps<"/recipes/import/[batchId]">) {
   const { batchId } = await props.params;

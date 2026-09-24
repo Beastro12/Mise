@@ -80,7 +80,14 @@ test("import → plan → list → split → check off → pantry", async ({ pag
   const expected = ["hedelmat_vihannekset", "leipa", "liha_kala", "maito_juusto", "kuivatuotteet", "pakasteet", "juomat", "muut"];
   expect(sectionOrder).toEqual(expected.filter((k) => sectionOrder.includes(k)));
 
-  // 5. Match a product for kerma (mock S-kaupat adapter) → packs shown.
+  // 5a. First-time matching queue: each unmatched S-market ingredient with its top 3 candidates.
+  await page.click('[data-testid="match-queue"]');
+  await expect(page).toHaveURL(/\/products\/match\?list=/);
+  const perunaCard = page.locator("li", { has: page.locator("span.font-semibold", { hasText: /^peruna$/ }) });
+  await expect(perunaCard.getByRole("button", { name: "Use" })).toHaveCount(2); // mock catalogue has 2 potato products
+  await page.goto(listUrl);
+
+  // 5b. Match a product for kerma from the item menu (mock S-kaupat adapter) → packs shown.
   await item(page, "smarket", "kerma").locator('[data-testid="item-options"]').click();
   await page.getByRole("link", { name: "Match product" }).click();
   await expect(page.locator('[data-testid="candidates"] li')).toHaveCount(3);

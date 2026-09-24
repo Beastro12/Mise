@@ -65,7 +65,58 @@ The rule: default S-market; move to Lidl only on an active Lidl offer (valid tod
 Offers get a `name_fi` at import (from Claude, or the synonym table plus text cleanup). An offer matches an item when the `name_fi` values are equal, or when the offer's product name contains the item's `name_fi` as a whole word, e.g. "Kermaviili 10 % 200 g" matches `kermaviili`.
 
 ### D15. Propose mode is deterministic scoring, not an LLM call
-It is testable, instant, free, and works without an API key. Filters: include tags (recipe needs at least one) and exclude tags (none allowed); nothing cooked or planned in the last 14 days; the weekday time limit (prep + cook) applies to meals placed Mon–Fri. Scores: +3 per main ingredient on an active Lidl offer, +1 per pantry ingredient, −4 for repeating a protein already chosen, plus small seeded jitter so "give me another" varies. The "protein" is derived from tags (kala, kana/broileri, nauta/jauheliha, possu, vegetarian/kasvis) or from the ingredients. Meals go on consecutive days starting Monday.
+It is testable, instant, free, and works without an API key. Filters: include tags (recipe needs at least one) and exclude tags (none allowed); nothing cooked or planned in the last 14 days; the weekday time limit (prep + cook) applies to meals placed Mon–Fri. Scores (non-staple ingredients only): +4 per meat/fish ingredient and +2 per other ingredient on a Lidl offer, +1 per pantry ingredient (at most +3), −4 for repeating a protein already chosen, plus up to +1.5 seeded jitter so "give me another" varies. The "protein" is derived from tags (kala, kana/broileri, nauta/jauheliha, possu, vegetarian/kasvis) or from the ingredients. Meals go on consecutive days starting Monday.
 
 ### D16. Shopping sections
 The eight sections from the brief, in this seeded order: hedelmät ja vihannekset → leipä → liha ja kala → maito ja juusto → kuivatuotteet → pakasteet → juomat → muut. Spices and oils are in kuivatuotteet, eggs in maito ja juusto. You can reorder them per store in Settings; the order is stored in `store_sections`.
+
+### D17. Review corrections only add synonyms, never overwrite
+When you save a reviewed recipe, each ingredient name you mapped differently becomes a synonym, **but only if that term is new**. Existing mappings, seed or yours, are never changed silently by one recipe edit. Change a mapping globally in More → Ingredient synonyms. Claude's answers for unknown names are stored the same way (source `claude`).
+
+### D18. Claude structured-output enums are sent as strings
+The SDK's Zod helper turns `enum` into description text and validates on the client, so one unexpected unit would make the whole extraction fail. Units, sections and unit-price units are therefore plain strings, with the allowed values in the field description, sanitized on the server (unknown unit → `kpl` with the quantity kept; unknown section → `muut`).
+
+### D19. Offline design
+The service worker (production builds only) caches static assets cache-first and page navigations network-first, falling back to the cached page. API calls are never cached. The checklist keeps a copy of the list in `localStorage`, plus a queue of check-offs made offline that is flushed when the connection returns. Other actions (move store, add item, to pantry) need a connection and say so.
+
+### D20. Product mapping is per ingredient for S-market; Lidl uses offers
+Lidl has no catalogue, so Lidl items carry the matched offer (name, price, validity) instead of a mapped product. Changing a mapping immediately updates product, pack count and price on existing lists.
+
+### D21. Regenerating a list keeps your work
+Check-offs, manually added items, manual store choices and "have it"/"need it" answers survive regeneration. Meals already marked as cooked are left out of the list.
+
+### D22. Parsing details
+Ranges buy the upper bound ("1–2 chiliä" → 2). Optional ingredients stay on the list with the note "optional". Water (`vesi`) never goes on the list. A bare count ("2 munaa") gets the unit `kpl`.
+
+### D23. Offer dates
+Propose mode counts offers valid on any day of the planned week. The store split on a list uses offers valid **today** (Europe/Helsinki), because that's when you shop. Regenerate the list on shopping day if offers changed.
+
+### D24. Mock catalogue has no real brand names
+The mock S-kaupat products use generic names, so no invented price is attached to a real brand. They are badged **MOCK** everywhere and exported with `s_kaupat_product_id: null`.
+
+### D25. Cheaper-than check needs an S-market price
+In production (adapter `none`), the S-market price is known only for products you typed in when matching. Without one, a matching Lidl offer moves the item to Lidl (the brief's rule when the price comparison isn't possible).
+
+### D26. Deployment guards
+On Vercel, a missing `DATABASE_URL` or `BLOB_STORE=supabase` gives a clear error instead of silently writing to the ephemeral disk. Pages that call Claude set `maxDuration = 300`.
+
+### D27. Test tooling
+Playwright is pinned to 1.56.1 to match the Chromium preinstalled in the build container (`PLAYWRIGHT_CHROMIUM` overrides the executable). The e2e suite builds the app and runs against a fresh PGlite database, or a real Postgres via `E2E_DATABASE_URL`. The second e2e test (offline) reuses the list created by the first, so the tests run in order on one worker. The .docx and .pdf fixtures come from `tests/fixtures/generate.py` (stdlib only), because LibreOffice couldn't load files in the container.
+
+### D28. Dev server origins
+Next 16 blocks dev resources for origins other than localhost. `127.0.0.1` is allowed, and more hosts can be added with `DEV_ORIGINS` (e.g. to test on the phone over wifi).
+
+### D29. S-market store placeholder
+The brief left `S_MARKET_STORE = <FILL IN>`. The app seeds "S-market (set your store in Settings)", unless `S_MARKET_STORE` is set at seed time, and the name and S-kaupat store id are editable under More → Stores. Nothing else depends on the name until a verified S-kaupat adapter exists.
+
+## Verification status (summary)
+
+| Source / integration | Status | Evidence |
+|---|---|---|
+| schema.org JSON-LD recipe import | **VERIFIED** (local fixture) | e2e test + unit tests on JSON-LD shapes (`@graph`, `HowToSection`, `@type` arrays). Real recipe sites were blocked from the build env. |
+| Local .txt/.md/.docx/.pdf parsing | **VERIFIED** | unit tests with generated fixtures + browser test |
+| Claude (vision/PDF/text extraction, normalization, leaflet) | **UNVERIFIED live** | SDK-documented request shape; stubbed-client unit tests; no API key in build env |
+| S-kaupat product search/prices | **UNVERIFIED → MOCK** | s-kaupat.fi blocked (egress 403); no endpoint invented |
+| lidl.fi weekly offers | **UNVERIFIED → not built** | lidl.fi blocked; leaflet photo/text import used instead |
+| Supabase Postgres | **VERIFIED equivalent** | full e2e suite passed against a local Postgres 16 with the same driver settings |
+| Supabase Storage | **UNVERIFIED live** | follows supabase-js docs; local storage path tested |

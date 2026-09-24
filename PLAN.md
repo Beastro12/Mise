@@ -15,16 +15,16 @@ Browser (phone, PWA)
 Next.js server (Vercel, Node runtime)
   ├─ proxy.ts: passcode cookie gate (share links bypass it)
   ├─ Route handlers  src/app/api/**   (JSON API used by client components)
-  ├─ Server actions  src/app/**/actions.ts (simple form mutations)
+  ├─ Server actions  src/app/actions/*.ts (form mutations; each checks auth)
   ├─ Domain core (pure, unit tested)    src/lib/domain/**
-  │     units · ingredient-parser · scaling · aggregate · pantry · store-split
-  │     · sections · propose · offers-match · packs
+  │     units · ingredient-parser · normalize · vocabulary · scaling · aggregate · pantry
+  │     · store-split · offers · packs · sections · list-builder · propose · recipe-draft
   ├─ Services (DB + side effects)       src/lib/services/**
-  │     recipes · imports · plans · lists · pantry · mapping · offers · settings
+  │     recipes · imports · originals · vocab · plans · lists · pantry · products · offers · settings
   ├─ Import pipeline                    src/lib/import/**
-  │     jsonld (schema.org Recipe) · fetch-page · files (pdf/docx/txt/md) · text-heuristic
+  │     jsonld (schema.org Recipe) · fetch-page · files (pdf/docx) · text-heuristic · offers-text · claude-map
   ├─ Claude (server only)               src/lib/ai/**
-  │     client · extract-recipes (vision/pdf/text) · normalize-ingredients · extract-offers
+  │     client · extract (recipes: vision/pdf/text; ingredient names; leaflet offers)
   ├─ Store adapters                     src/lib/stores/**
   │     StoreAdapter interface · cached+rate-limited wrapper
   │     s-kaupat: mock | none  (real HTTP adapter UNVERIFIED, not built; see DECISIONS)
@@ -57,7 +57,7 @@ Postgres (Supabase in production; embedded PGlite for zero-setup local dev/tests
 | `meal_plans` | week_start, default_servings, mode, propose params |
 | `planned_meals` | plan_id, recipe_id, servings, day, locked, reason, cooked_at (history) |
 | `shopping_lists` | plan_id, share_token, version (bumped on every change → spouse polling) |
-| `shopping_items` | name_fi, display, quantity, unit, section, store, store_reason, store_locked, product_id, packs, price, sources jsonb, staple_state, checked |
+| `shopping_items` | name_fi, display_name, quantity, unit, section, store_id, store_reason, store_overridden, product_id, packs, price, offer_id, sources jsonb, state (none/ask/covered/have), note, manual, checked, moved_to_pantry |
 
 ## Core algorithms (pure functions, unit tested)
 

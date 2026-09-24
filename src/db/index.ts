@@ -30,6 +30,9 @@ async function createDb(): Promise<DB> {
     return db as unknown as DB;
   }
 
+  if (process.env.VERCEL) {
+    throw new Error("DATABASE_URL is not set. On Vercel the app needs Postgres (Supabase); the embedded local database can't persist there.");
+  }
   // Zero-setup local mode: embedded Postgres (PGlite) persisted on disk.
   const dataDir = process.env.PGLITE_DIR || path.join(process.cwd(), ".data", "pglite");
   fs.mkdirSync(dataDir, { recursive: true });

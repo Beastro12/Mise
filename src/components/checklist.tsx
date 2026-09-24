@@ -187,6 +187,7 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
   const covered = list.items.filter((i) => i.state === "covered" || i.state === "have");
   const groups = useMemo(() => groupForDisplay(buy, list.sectionOrder), [buy, list.sectionOrder]);
   const checkedToPantry = list.items.filter((i) => i.checked && !i.movedToPantry).length;
+  const unmatched = list.items.filter((i) => i.storeId === "smarket" && i.state === "none" && !i.product).length;
   const storeName = (id: string) => list.stores.find((s) => s.id === id)?.name ?? (id === "lidl" ? "Lidl" : "S-market");
   const done = buy.filter((i) => i.checked).length;
   const shareUrl = typeof window !== "undefined" && list.shareToken ? `${window.location.origin}/share/${list.shareToken}` : null;
@@ -227,9 +228,21 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
           <button className={btn.secondary} onClick={share} disabled={!shareUrl}>
             Share
           </button>
+          <button
+            className={btn.ghost}
+            disabled={busy}
+            onClick={() => ownerCall(base, { action: "renewToken" }, "New share link created; the old link no longer works.")}
+          >
+            New link
+          </button>
           <a className={btn.secondary} href={`${base}/export`} data-testid="export">
             Export S-market JSON
           </a>
+          {unmatched ? (
+            <Link className={btn.secondary} href={`/products/match?list=${list.id}`} data-testid="match-queue">
+              Match {unmatched} product{unmatched === 1 ? "" : "s"}
+            </Link>
+          ) : null}
           {list.planId ? (
             <Link className={btn.ghost} href={`/plan/${list.planId}`}>
               Plan

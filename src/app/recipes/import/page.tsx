@@ -3,6 +3,8 @@ import { PageTitle } from "@/components/ui";
 import { aiAvailable } from "@/lib/ai/client";
 
 export const dynamic = "force-dynamic";
+// Claude extraction of several pages can take a while (server actions inherit this).
+export const maxDuration = 300;
 
 export default function ImportPage() {
   return (
