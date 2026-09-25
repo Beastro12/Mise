@@ -16,10 +16,10 @@ export default async function ListsPage() {
           No list yet. <Link className="underline" href="/plan">Plan some meals</Link> and generate one.
         </Empty>
       ) : (
-        <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
+        <ul className="divide-y divide-line border-y border-line">
           {lists.map((l) => (
             <li key={l.id}>
-              <Link href={`/list/${l.id}`} className="flex justify-between px-4 py-3 hover:bg-surface-2">
+              <Link href={`/list/${l.id}`} className="flex justify-between px-1 py-3.5 hover:bg-surface-2">
                 <span className="font-medium">{l.name}</span>
                 <span className="text-xs text-muted">{l.updatedAt.toLocaleDateString("fi-FI")}</span>
               </Link>

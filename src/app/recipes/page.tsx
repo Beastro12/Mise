@@ -35,12 +35,12 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
       {recipes.length === 0 ? (
         <Empty>No recipes match. Import one from a link, photo or file.</Empty>
       ) : (
-        <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
+        <ul className="divide-y divide-line border-y border-line">
           {recipes.map((r) => {
             const mins = (r.prepMinutes ?? 0) + (r.cookMinutes ?? 0);
             return (
               <li key={r.id}>
-                <Link href={`/recipes/${r.id}`} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-2">
+                <Link href={`/recipes/${r.id}`} className="flex items-center justify-between gap-3 px-1 py-3.5 hover:bg-surface-2">
                   <div className="min-w-0">
                     <div className="truncate font-medium">{r.title}</div>
                     <div className="mt-0.5 flex flex-wrap gap-1">

@@ -33,8 +33,8 @@ export default async function LoginPage(props: PageProps<"/login">) {
   if (!authEnabled()) redirect("/");
   return (
     <div className="mx-auto mt-20 max-w-sm">
-      <AittaMark className="mb-5 h-10 w-10 text-accent" />
-      <h1 className="text-[34px] font-medium leading-none tracking-[-0.03em]">Aitta</h1>
+      <AittaMark className="mb-6 h-10 w-10 text-ink" />
+      <h1 className="font-display text-[40px] font-[380] lowercase leading-none tracking-[0.01em]">aitta</h1>
       <p className="mt-2 mb-8 text-sm text-muted">Meal planner · S-market + Lidl Vähäheikkilä</p>
       <Card>
         <form action={login} className="space-y-4">

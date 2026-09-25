@@ -1,47 +1,53 @@
 @import "tailwindcss";
 
-/* Aitta: "birch & frost". Birch-paper background, charcoal ink, one fjord-blue
-   accent, hairline borders. S-market = moss, Lidl = lake. */
+/* Aitta: Iittala/Artek-style calm. Near-monochrome warm greys, flat surfaces,
+   hairlines, and one rarely used sage accent. Store markers are muted:
+   S-market = moss-grey, Lidl = steel blue. */
 :root {
-  --bg: #f4f2ee;
-  --surface: #ffffff;
-  --surface-2: #eceae4;
-  --ink: #22262a;
-  --muted: #676d73;
-  --line: #e1ddd5;
-  --accent: #3e6a86;
-  --accent-strong: #325871;
-  --accent-ink: #ffffff;
-  --accent-soft: #e4edf3;
-  --warn: #85561a;
-  --warn-soft: #f6efe2;
-  --danger: #a23b3b;
-  --smarket: #46714f;
-  --smarket-soft: #e5eee6;
-  --lidl: #2f5d8a;
-  --lidl-soft: #e2eaf3;
+  --bg: #f5f4f1;
+  --surface: #fbfaf8;
+  --surface-2: #eeede9;
+  --ink: #1f2220;
+  --muted: #6e716c;
+  --line: #e3e1dc;
+  --accent: #5b6f5e;
+  --accent-strong: #4a5c4d;
+  --accent-ink: #fbfaf8;
+  --accent-soft: #e8ece6;
+  --primary: #1f2220;
+  --primary-strong: #353936;
+  --primary-ink: #f5f4f1;
+  --warn: #7d5a26;
+  --warn-soft: #f4efe4;
+  --danger: #9b3b35;
+  --smarket: #4a5a4e;
+  --smarket-soft: #e9ece8;
+  --lidl: #4c6680;
+  --lidl-soft: #e6ebf0;
 }
 
-/* Frost night */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #14181c;
-    --surface: #1b2026;
-    --surface-2: #232a31;
-    --ink: #e8ecef;
-    --muted: #9aa4ad;
-    --line: #2c343c;
-    --accent: #8db4ce;
-    --accent-strong: #a5c5da;
-    --accent-ink: #0f1a22;
-    --accent-soft: #1e2c37;
-    --warn: #e3b872;
-    --warn-soft: #33291a;
-    --danger: #e38b8b;
-    --smarket: #93be9d;
-    --smarket-soft: #1c2a21;
-    --lidl: #8fb3da;
-    --lidl-soft: #1b2635;
+    --bg: #161816;
+    --surface: #1c1f1d;
+    --surface-2: #242825;
+    --ink: #e9ebe7;
+    --muted: #9ca19a;
+    --line: #2e322f;
+    --accent: #a9bca8;
+    --accent-strong: #bfcfbe;
+    --accent-ink: #161816;
+    --accent-soft: #232b24;
+    --primary: #e9ebe7;
+    --primary-strong: #ffffff;
+    --primary-ink: #161816;
+    --warn: #d9b27a;
+    --warn-soft: #2e2719;
+    --danger: #e0918a;
+    --smarket: #b3c1b5;
+    --smarket-soft: #222824;
+    --lidl: #9fb6cd;
+    --lidl-soft: #1f2630;
   }
 }
 
@@ -56,6 +62,9 @@
   --color-accent-strong: var(--accent-strong);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-ink: var(--primary-ink);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
   --color-danger: var(--danger);
@@ -63,6 +72,7 @@
   --color-smarket-soft: var(--smarket-soft);
   --color-lidl: var(--lidl);
   --color-lidl-soft: var(--lidl-soft);
+  --font-display: "Jost Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 

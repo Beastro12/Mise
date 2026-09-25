@@ -9,7 +9,7 @@ A personal meal planner and shopping list for one household in Turku. It plans t
 - **List:** ingredients are merged across recipes (2 dl + 100 ml → 3 dl), and the pantry is subtracted. Staples trigger a "Have it?" question instead of being added. Pack counts come from the product you matched. Everything defaults to S-market and moves to Lidl only on a (cheaper) Lidl offer, with the reason shown. Sections follow each store's walking order. The checklist works offline, and checked items go to the pantry in one tap. Your spouse can use the same list through a share link.
 - **Stores:** Lidl offers come from leaflet photos or pasted text. S-kaupat product data is a **mock** until the real site can be verified (see [DECISIONS.md](DECISIONS.md)).
 
-Design: “birch & frost”: birch-paper background, charcoal ink, one fjord-blue accent, hairlines, Inter (self-hosted via `@fontsource-variable/inter`); a “frost night” dark theme follows the phone setting. The GitHub repo is still called `Mise`; the app itself is Aitta.
+Design: Iittala/Artek-style calm: near-monochrome warm greys, a sage accent used sparingly, flat hairline lists, Jost headings and Inter body text (both bundled), custom line icons; a dark theme follows the phone setting (DECISIONS D31). The GitHub repo is still called `Mise`; the app itself is Aitta.
 
 Docs: [PLAN.md](PLAN.md) (architecture, data model) · [DECISIONS.md](DECISIONS.md) (choices, and which data sources are verified or mocked) · [NEXT_SESSION.md](NEXT_SESSION.md) (cart-automation hand-off).
 

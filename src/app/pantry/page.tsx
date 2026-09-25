@@ -2,6 +2,7 @@ import { listPantry } from "@/lib/services/pantry";
 import { addPantryAction, updatePantryAction, usedUpAction } from "@/app/actions/pantry";
 import { SECTIONS } from "@/lib/domain/sections";
 import { formatQty } from "@/lib/domain/units";
+import { SectionIcon } from "@/components/icons";
 import { Button, Card, Empty, PageTitle, btn, cx, inputCls } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -17,17 +18,20 @@ export default async function PantryPage() {
           <Button type="submit">Add</Button>
         </form>
       </Card>
-      <div className="mt-4 space-y-4">
+      <div className="mt-8 space-y-7">
         {items.length === 0 ? <Empty>The pantry is empty.</Empty> : null}
         {SECTIONS.map((s) => {
           const inSection = items.filter((i) => i.category === s.key);
           if (!inSection.length) return null;
           return (
             <div key={s.key}>
-              <div className="px-1 pb-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">{s.fi}</div>
-              <ul className="divide-y divide-line rounded-lg border border-line bg-surface" data-testid="pantry-list">
+              <div className="flex items-center gap-1.5 pb-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+                <SectionIcon section={s.key} />
+                {s.fi}
+              </div>
+              <ul className="divide-y divide-line border-y border-line" data-testid="pantry-list">
                 {inSection.map((i) => (
-                  <li key={i.id} className="px-3 py-2" data-testid="pantry-item" data-name={i.nameFi}>
+                  <li key={i.id} className="px-1 py-2.5" data-testid="pantry-item" data-name={i.nameFi}>
                     <details>
                       <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
                         <span className="font-medium">{i.nameFi.charAt(0).toUpperCase() + i.nameFi.slice(1)}</span>

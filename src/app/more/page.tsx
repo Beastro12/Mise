@@ -21,10 +21,10 @@ export default function MorePage() {
   return (
     <div>
       <PageTitle>More</PageTitle>
-      <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
+      <ul className="divide-y divide-line border-y border-line">
         {LINKS.map((l) => (
           <li key={l.href}>
-            <Link href={l.href} className="block px-4 py-3 hover:bg-surface-2">
+            <Link href={l.href} className="block px-1 py-3.5 hover:bg-surface-2">
               <div className="font-medium">{l.title}</div>
               <div className="text-xs text-muted">{l.sub}</div>
             </Link>
@@ -32,7 +32,7 @@ export default function MorePage() {
         ))}
       </ul>
       <Section title="Status">
-        <dl className="space-y-1.5 rounded-lg border border-line bg-surface p-4 text-sm">
+        <dl className="space-y-2.5 border-y border-line py-4 text-sm">
           <div className="flex justify-between gap-2">
             <dt>Database</dt>
             <dd>{process.env.DATABASE_URL ? "Postgres (DATABASE_URL)" : "Local PGlite (.data/)"}</dd>

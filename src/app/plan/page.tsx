@@ -34,10 +34,10 @@ export default async function PlansPage() {
         {plans.length === 0 ? (
           <Empty>No plans yet.</Empty>
         ) : (
-          <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
+          <ul className="divide-y divide-line border-y border-line">
             {plans.map((p) => (
               <li key={p.id}>
-                <Link href={`/plan/${p.id}`} className="flex justify-between px-4 py-3 hover:bg-surface-2">
+                <Link href={`/plan/${p.id}`} className="flex justify-between px-1 py-3.5 hover:bg-surface-2">
                   <span className="font-medium">{p.name || weekLabel(p.weekStart)}</span>
                   <span className="text-xs text-muted">{p.weekStart === thisMonday ? "this week" : p.mode}</span>
                 </Link>

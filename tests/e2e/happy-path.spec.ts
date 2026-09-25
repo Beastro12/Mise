@@ -53,6 +53,7 @@ test("import → plan → list → split → check off → pantry", async ({ pag
     await expect(page.locator('[data-testid="meal"]').filter({ hasText: title })).toBeVisible();
   }
   await expect(page.locator('[data-testid="meal"]')).toHaveCount(3);
+  if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/plan.png`, fullPage: true });
 
   // 4. Generate the list and check the store split.
   await page.click('[data-testid="generate-list"]');
@@ -130,6 +131,7 @@ test("import → plan → list → split → check off → pantry", async ({ pag
   for (const n of ["peruna", "lohi", "kerma", "sipuli"]) {
     await expect(page.locator(`[data-testid="pantry-item"][data-name="${n}"]`)).toBeVisible();
   }
+  if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/pantry.png`, fullPage: true });
 });
 
 test("offline check-off is kept and synced", async ({ page, context }) => {

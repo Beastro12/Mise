@@ -123,3 +123,10 @@ The brief left `S_MARKET_STORE = <FILL IN>`. The app seeds "S-market (set your s
 
 ### D30. Name and visual identity: Aitta, "birch & frost"
 Renamed from "Mise FI" (the name belongs to an existing UK app) to **Aitta**, the Finnish word for a traditional food storehouse, chosen by you from a shortlist. **Not trademark- or domain-checked** (not possible from the build environment). Visuals: birch-paper background (#F4F2EE), charcoal ink (#22262A), one fjord-blue accent (#3E6A86), moss for S-market, lake blue for Lidl, hairline borders, squarer corners, Inter variable font bundled from npm (no Google Fonts request at runtime). Dark mode "frost night" follows the system setting. The icon is a line drawing of an aitta on stilts. Renamed internals too: cookie `aitta_session` (existing logins must sign in again), localStorage keys `aitta:*`, service-worker cache `aitta-v1`, default bucket `aitta-originals`.
+
+### D31. Visual refinement: Iittala/Artek calm
+Chosen in the interview: calm near-monochrome, geometric headings, a sage accent used rarely, flat surfaces with no texture. Changes from D30:
+- Palette: warm greys (bg #F5F4F1, ink #1F2220, hairline #E3E1DC). Primary buttons are charcoal. Sage (#5B6F5E) appears only on check marks and messages. Store markers are muted: S-market moss-grey #4A5A4E, Lidl steel #4C6680. Dark theme uses the same palette in reverse.
+- Type: Jost (geometric, bundled via `@fontsource-variable/jost`) for headings and the lowercase "aitta" wordmark; Inter for body text.
+- Layout: lists are flat rows between hairlines instead of boxed cards. Section and store headings are larger with more space around them. Secondary list actions (share, new link, export, open plan) are in a "···" menu. Plan-meal actions are quiet text links.
+- Icons: one line-icon set (nav, the eight store sections), a birch drawing for empty states, and an app icon with charcoal lines on birch white.

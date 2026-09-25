@@ -46,15 +46,15 @@ export default async function PlanPage(props: PageProps<"/plan/[id]">) {
       {meals.length === 0 ? (
         <Empty>No meals yet. Propose a week below, or add recipes yourself.</Empty>
       ) : (
-        <ul className="space-y-2" data-testid="meals">
+        <ul className="border-t border-line" data-testid="meals">
           {meals.map(({ meal, recipe }) => (
-            <li key={meal.id} className={cx("rounded-lg border border-line bg-surface p-3", meal.cookedAt && "opacity-70")} data-testid="meal">
+            <li key={meal.id} className={cx("border-b border-line py-4", meal.cookedAt && "opacity-60")} data-testid="meal">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
                     {dayLabel(meal.day)} {meal.locked ? <Badge tone="accent">locked</Badge> : null} {meal.cookedAt ? <Badge tone="accent">cooked</Badge> : null}
                   </div>
-                  <Link href={`/recipes/${recipe.id}?servings=${meal.servings}`} className="font-medium hover:underline">
+                  <Link href={`/recipes/${recipe.id}?servings=${meal.servings}`} className="font-display text-[19px] font-[420] leading-snug hover:underline">
                     {recipe.title}
                   </Link>
                   {meal.reason ? <div className="text-xs text-muted" data-testid="meal-reason">{meal.reason}</div> : null}
@@ -74,18 +74,18 @@ export default async function PlanPage(props: PageProps<"/plan/[id]">) {
                   </button>
                 </form>
               </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                 <form action={toggleLockAction}>
                   <input type="hidden" name="planId" value={plan.id} />
                   <input type="hidden" name="mealId" value={meal.id} />
                   <input type="hidden" name="locked" value={meal.locked ? "0" : "1"} />
-                  <button className={btn.small}>{meal.locked ? "Unlock" : "Lock"}</button>
+                  <button className={btn.quiet}>{meal.locked ? "Unlock" : "Lock"}</button>
                 </form>
                 {!meal.locked ? (
                   <form action={swapAction}>
                     <input type="hidden" name="planId" value={plan.id} />
                     <input type="hidden" name="mealId" value={meal.id} />
-                    <button className={btn.small} data-testid="swap">
+                    <button className={btn.quiet} data-testid="swap">
                       Give me another
                     </button>
                   </form>
@@ -94,12 +94,12 @@ export default async function PlanPage(props: PageProps<"/plan/[id]">) {
                   <input type="hidden" name="planId" value={plan.id} />
                   <input type="hidden" name="mealId" value={meal.id} />
                   <input type="hidden" name="cooked" value={meal.cookedAt ? "0" : "1"} />
-                  <button className={btn.small}>{meal.cookedAt ? "Not cooked" : "Mark cooked"}</button>
+                  <button className={btn.quiet}>{meal.cookedAt ? "Not cooked" : "Mark cooked"}</button>
                 </form>
                 <form action={removeMealAction}>
                   <input type="hidden" name="planId" value={plan.id} />
                   <input type="hidden" name="mealId" value={meal.id} />
-                  <button className={cx(btn.small, "text-danger")}>Remove</button>
+                  <button className={cx(btn.quiet, "hover:text-danger")}>Remove</button>
                 </form>
               </div>
             </li>
@@ -154,9 +154,9 @@ export default async function PlanPage(props: PageProps<"/plan/[id]">) {
         <form className="mb-2">
           <input name="q" defaultValue={q} placeholder="Search recipes" className={inputCls} />
         </form>
-        <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
+        <ul className="divide-y divide-line border-y border-line">
           {recipes.map((r) => (
-            <li key={r.id} className="flex items-center justify-between gap-2 px-4 py-2">
+            <li key={r.id} className="flex items-center justify-between gap-2 px-1 py-2.5">
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium">{r.title}</div>
                 <div className="text-xs text-muted">

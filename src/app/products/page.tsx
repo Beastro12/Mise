@@ -41,9 +41,9 @@ export default async function ProductsPage(props: PageProps<"/products">) {
         {maps.length === 0 ? (
           <Empty>No matches yet. Open a shopping list item and tap “Match product”.</Empty>
         ) : (
-          <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
+          <ul className="divide-y divide-line border-y border-line">
             {maps.map(({ map, product }) => (
-              <li key={map.id} className="flex items-center justify-between gap-2 px-3 py-2">
+              <li key={map.id} className="flex items-center justify-between gap-2 px-1 py-2.5">
                 <div className="min-w-0">
                   <Link href={`/products?name=${encodeURIComponent(map.nameFi)}`} className="text-sm font-semibold hover:underline">
                     {map.nameFi}
@@ -96,9 +96,9 @@ export default async function ProductsPage(props: PageProps<"/products">) {
       {shown.length === 0 ? (
         <Empty>No candidates. Add the product by hand below (copy the details from the S-kaupat app).</Empty>
       ) : (
-        <ul className="divide-y divide-line rounded-lg border border-line bg-surface" data-testid="candidates">
+        <ul className="divide-y divide-line border-y border-line" data-testid="candidates">
           {shown.map((p) => (
-            <li key={p.id} className="flex items-center justify-between gap-2 px-3 py-2">
+            <li key={p.id} className="flex items-center justify-between gap-2 px-1 py-2.5">
               <ProductLine p={p} />
               <form action={mapProductAction}>
                 <input type="hidden" name="nameFi" value={name} />

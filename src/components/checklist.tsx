@@ -8,6 +8,7 @@ import { SECTIONS } from "@/lib/domain/sections";
 import { formatQty } from "@/lib/domain/units";
 import { formatPrice } from "@/lib/domain/offers";
 import { Badge, btn, cx, inputCls } from "./ui";
+import { SectionIcon } from "./icons";
 
 type Mode = "owner" | "share";
 type QueueEntry = { itemId: string; checked: boolean };
@@ -216,7 +217,7 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
       </div>
 
       {mode === "owner" ? (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-6 flex items-center gap-2">
           <button
             className={btn.primary}
             disabled={busy || !checkedToPantry}
@@ -225,37 +226,44 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
           >
             Checked → pantry{checkedToPantry ? ` (${checkedToPantry})` : ""}
           </button>
-          <button className={btn.secondary} onClick={share} disabled={!shareUrl}>
-            Share
-          </button>
-          <button
-            className={btn.ghost}
-            disabled={busy}
-            onClick={() => ownerCall(base, { action: "renewToken" }, "New share link created; the old link no longer works.")}
-          >
-            New link
-          </button>
-          <a className={btn.secondary} href={`${base}/export`} data-testid="export">
-            Export S-market JSON
-          </a>
           {unmatched ? (
-            <Link className={btn.secondary} href={`/products/match?list=${list.id}`} data-testid="match-queue">
+            <Link className="px-2 text-sm text-muted underline decoration-line underline-offset-4" href={`/products/match?list=${list.id}`} data-testid="match-queue">
               Match {unmatched} product{unmatched === 1 ? "" : "s"}
             </Link>
           ) : null}
-          {list.planId ? (
-            <Link className={btn.ghost} href={`/plan/${list.planId}`}>
-              Plan
-            </Link>
-          ) : null}
+          <details className="relative ml-auto">
+            <summary className={cx(btn.ghost, "list-none cursor-pointer")} aria-label="More list actions">
+              ···
+            </summary>
+            <div className="absolute right-0 z-20 mt-1 flex w-52 flex-col rounded-md border border-line bg-surface py-1 text-sm shadow-[0_8px_24px_-12px_rgba(0,0,0,.18)]">
+              <button className="px-4 py-2 text-left hover:bg-surface-2" onClick={share} disabled={!shareUrl}>
+                Share with household
+              </button>
+              <button
+                className="px-4 py-2 text-left hover:bg-surface-2"
+                disabled={busy}
+                onClick={() => ownerCall(base, { action: "renewToken" }, "New share link created; the old link no longer works.")}
+              >
+                New share link
+              </button>
+              <a className="px-4 py-2 hover:bg-surface-2" href={`${base}/export`} data-testid="export">
+                Export S-market JSON
+              </a>
+              {list.planId ? (
+                <Link className="px-4 py-2 hover:bg-surface-2" href={`/plan/${list.planId}`}>
+                  Open plan
+                </Link>
+              ) : null}
+            </div>
+          </details>
         </div>
       ) : null}
-      {message ? <p className="mb-3 rounded-lg bg-accent-soft px-3 py-2 text-sm text-accent" data-testid="list-message">{message}</p> : null}
+      {message ? <p className="mb-5 border-l-2 border-accent py-1 pl-3 text-sm text-ink" data-testid="list-message">{message}</p> : null}
 
       {ask.length ? (
-        <div className="mb-4 rounded-lg border border-line bg-warn-soft/50 p-3" data-testid="have-it">
-          <div className="mb-2 text-sm font-semibold">Have it?</div>
-          <ul className="space-y-1.5">
+        <div className="mb-8 border-y border-line py-4" data-testid="have-it">
+          <div className="mb-3 font-display text-lg font-[420]">Have it at home?</div>
+          <ul className="space-y-2">
             {ask.map((i) => (
               <li key={i.id} className="flex items-center justify-between gap-2">
                 <span className="text-sm">
@@ -275,21 +283,24 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
         </div>
       ) : null}
 
-      {groups.length === 0 ? <p className="rounded-lg border border-dashed border-line p-6 text-center text-sm text-muted">Nothing to buy.</p> : null}
+      {groups.length === 0 ? <p className="border-y border-line py-10 text-center text-sm text-muted">Nothing to buy.</p> : null}
 
       {groups.map((g) => (
-        <section key={g.storeId} className="mb-6" data-testid={`store-${g.storeId}`}>
-          <h2 className={cx("mb-3 flex items-baseline justify-between border-b-2 pb-2 text-[15px] font-medium", g.storeId === "lidl" ? "border-lidl" : "border-smarket")}>
+        <section key={g.storeId} className="mb-10" data-testid={`store-${g.storeId}`}>
+          <h2 className={cx("mb-4 flex items-baseline justify-between border-b pb-2 font-display text-[22px] font-[400]", g.storeId === "lidl" ? "border-lidl" : "border-smarket")}>
             <span className="flex items-center gap-2">
-              <span className={cx("h-2 w-2 rounded-full", g.storeId === "lidl" ? "bg-lidl" : "bg-smarket")} aria-hidden />
+              <span className={cx("h-2.5 w-2.5 rounded-full", g.storeId === "lidl" ? "bg-lidl" : "bg-smarket")} aria-hidden />
               {storeName(g.storeId)}
             </span>
-            <span className="text-xs font-normal text-muted tabular">{g.sections.reduce((n, s) => n + s.items.length, 0)} items</span>
+            <span className="font-sans text-xs font-normal text-muted tabular">{g.sections.reduce((n, s) => n + s.items.length, 0)} items</span>
           </h2>
           {g.sections.map((s) => (
-            <div key={s.key} className="mb-3" data-testid={`section-${g.storeId}-${s.key}`}>
-              <div className="px-1 pb-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">{SECTIONS.find((x) => x.key === s.key)?.fi}</div>
-              <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
+            <div key={s.key} className="mb-5" data-testid={`section-${g.storeId}-${s.key}`}>
+              <div className="flex items-center gap-1.5 pb-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+                <SectionIcon section={s.key} />
+                {SECTIONS.find((x) => x.key === s.key)?.fi}
+              </div>
+              <ul className="divide-y divide-line border-y border-line">
                 {s.items.map((i) => (
                   <Row
                     key={i.id}
@@ -373,11 +384,11 @@ function Row({
   return (
     <li data-testid="list-item" data-name={i.nameFi} data-checked={i.checked ? "1" : "0"}>
       <div className="flex items-stretch">
-        <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-start gap-3 px-3 py-2.5 text-left" aria-pressed={i.checked}>
+        <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-start gap-3.5 py-3 pl-0.5 text-left" aria-pressed={i.checked}>
           <span
             className={cx(
-              "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
-              i.checked ? "border-accent bg-accent text-accent-ink" : "border-line",
+              "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] text-[11px] transition-colors",
+              i.checked ? "border-accent bg-accent text-accent-ink" : "border-muted/50",
             )}
             aria-hidden
           >
@@ -405,13 +416,13 @@ function Row({
           </span>
         </button>
         {mode === "owner" ? (
-          <button type="button" onClick={onOpen} className="px-3 text-muted" aria-label="Item options" data-testid="item-options">
+          <button type="button" onClick={onOpen} className="pl-3 pr-1 text-muted" aria-label="Item options" data-testid="item-options">
             ⋯
           </button>
         ) : null}
       </div>
       {open && mode === "owner" ? (
-        <div className="space-y-2 border-t border-line bg-bg px-3 py-2 text-sm">
+        <div className="space-y-2 border-t border-dashed border-line py-3 pl-9 text-sm">
           {i.sources.length ? <div className="text-xs text-muted">For: {i.sources.join(", ")}</div> : null}
           <div className="flex flex-wrap gap-1.5">
             <button className={btn.small} disabled={busy} onClick={() => onStore(other, false)} data-testid="move-store">
