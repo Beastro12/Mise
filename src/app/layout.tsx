@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/inter";
-import "@fontsource-variable/jost";
+import "@fontsource-variable/bricolage-grotesque";
 import "./globals.css";
 import { BottomNav } from "@/components/nav";
 import { TopBar } from "@/components/top-bar";
@@ -18,8 +18,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f4f1" },
-    { media: "(prefers-color-scheme: dark)", color: "#161816" },
+    { media: "(prefers-color-scheme: light)", color: "#1f3b2e" },
+    { media: "(prefers-color-scheme: dark)", color: "#101913" },
   ],
 };
 

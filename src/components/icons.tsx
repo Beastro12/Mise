@@ -49,3 +49,17 @@ export function Birches({ className = "h-14 w-20" }: { className?: string }) {
     </svg>
   );
 }
+
+/** A chanterelle (kantarelli): the empty-state drawing. */
+export function Mushroom({ className = "h-16 w-16" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" className={className} aria-hidden>
+      <ellipse cx="32" cy="56" rx="18" ry="3" fill="#000" opacity=".07" />
+      <path d="M27 54c1-8 1-14-1-21h12c-2 7-2 13-1 21z" fill="#e8b24f" />
+      <path d="M10 26c2-9 12-14 22-14s20 5 22 14c-4 5-12 7-22 7s-18-2-22-7z" fill="#e3a02f" />
+      <path d="M16 27c5 2 10 3 16 3s11-1 16-3" stroke="#c8861b" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      <path d="M22 30l3 6M32 31v7M42 30l-3 6" stroke="#c8861b" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M44 50c3-4 7-5 10-4-2 3-6 5-10 4z" fill="#3e6b2f" />
+    </svg>
+  );
+}

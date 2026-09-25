@@ -3,6 +3,7 @@ import { addPantryAction, updatePantryAction, usedUpAction } from "@/app/actions
 import { SECTIONS } from "@/lib/domain/sections";
 import { formatQty } from "@/lib/domain/units";
 import { SectionIcon } from "@/components/icons";
+import { foodColor } from "@/lib/domain/food-colors";
 import { Button, Card, Empty, PageTitle, btn, cx, inputCls } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -25,16 +26,19 @@ export default async function PantryPage() {
           if (!inSection.length) return null;
           return (
             <div key={s.key}>
-              <div className="flex items-center gap-1.5 pb-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-                <SectionIcon section={s.key} />
+              <div className="flex items-center gap-1.5 px-1 pb-1.5 text-xs font-bold text-primary">
+                <SectionIcon section={s.key} className="h-4 w-4 text-chanterelle-strong" />
                 {s.fi}
               </div>
-              <ul className="divide-y divide-line border-y border-line" data-testid="pantry-list">
+              <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]" data-testid="pantry-list">
                 {inSection.map((i) => (
                   <li key={i.id} className="px-1 py-2.5" data-testid="pantry-item" data-name={i.nameFi}>
                     <details>
                       <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
-                        <span className="font-medium">{i.nameFi.charAt(0).toUpperCase() + i.nameFi.slice(1)}</span>
+                        <span className="flex items-center gap-2 font-semibold">
+                          <span className="h-2.5 w-2.5 rounded-full ring-1 ring-black/10" style={{ background: foodColor(i.nameFi, i.category) }} aria-hidden />
+                          {i.nameFi.charAt(0).toUpperCase() + i.nameFi.slice(1)}
+                        </span>
                         <span className="text-sm text-muted tabular">{formatQty(i) || i.note || "some"}</span>
                       </summary>
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">

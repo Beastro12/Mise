@@ -44,6 +44,11 @@ test("import → plan → list → split → check off → pantry", async ({ pag
   await expect(page.getByText("Added 2 offers")).toBeVisible();
   await expect(page.locator('[data-testid="offers"] li')).toHaveCount(2);
 
+  if (process.env.SHOTS) {
+    await page.goto("/recipes");
+    await page.screenshot({ path: `${process.env.SHOTS}/recipes.png`, fullPage: true });
+  }
+
   // 3. Plan 3 meals (pick mode).
   await page.goto("/plan");
   await page.click('[data-testid="new-plan"]');

@@ -41,7 +41,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
         {maps.length === 0 ? (
           <Empty>No matches yet. Open a shopping list item and tap “Match product”.</Empty>
         ) : (
-          <ul className="divide-y divide-line border-y border-line">
+          <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]">
             {maps.map(({ map, product }) => (
               <li key={map.id} className="flex items-center justify-between gap-2 px-1 py-2.5">
                 <div className="min-w-0">
@@ -75,7 +75,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
 
       {current ? (
         <Card className="mb-4">
-          <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">Current match</div>
+          <div className="mb-1 text-xs font-bold text-primary">Current match</div>
           <ProductLine p={current.product} />
         </Card>
       ) : null}
@@ -96,7 +96,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
       {shown.length === 0 ? (
         <Empty>No candidates. Add the product by hand below (copy the details from the S-kaupat app).</Empty>
       ) : (
-        <ul className="divide-y divide-line border-y border-line" data-testid="candidates">
+        <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]" data-testid="candidates">
           {shown.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-2 px-1 py-2.5">
               <ProductLine p={p} />

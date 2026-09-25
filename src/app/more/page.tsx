@@ -21,7 +21,7 @@ export default function MorePage() {
   return (
     <div>
       <PageTitle>More</PageTitle>
-      <ul className="divide-y divide-line border-y border-line">
+      <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]">
         {LINKS.map((l) => (
           <li key={l.href}>
             <Link href={l.href} className="block px-1 py-3.5 hover:bg-surface-2">

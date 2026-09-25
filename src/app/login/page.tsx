@@ -33,9 +33,9 @@ export default async function LoginPage(props: PageProps<"/login">) {
   if (!authEnabled()) redirect("/");
   return (
     <div className="mx-auto mt-20 max-w-sm">
-      <AittaMark className="mb-6 h-10 w-10 text-ink" />
-      <h1 className="font-display text-[40px] font-[380] lowercase leading-none tracking-[0.01em]">aitta</h1>
-      <p className="mt-2 mb-8 text-sm text-muted">Meal planner · S-market + Lidl Vähäheikkilä</p>
+      <AittaMark className="mb-5 h-11 w-11 text-chanterelle" />
+      <h1 className="font-display text-[48px] font-[720] lowercase leading-none tracking-[-0.03em] text-primary">aitta</h1>
+      <p className="mt-2 mb-8 text-sm text-muted">Weekly meals and shopping for S-market + Lidl</p>
       <Card>
         <form action={login} className="space-y-4">
           <input type="hidden" name="next" value={safeNext(sp.next)} />

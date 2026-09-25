@@ -1,53 +1,66 @@
 @import "tailwindcss";
 
-/* Aitta: Iittala/Artek-style calm. Near-monochrome warm greys, flat surfaces,
-   hairlines, and one rarely used sage accent. Store markers are muted:
-   S-market = moss-grey, Lidl = steel blue. */
+/* Aitta: the Finnish autumn kitchen.
+   spruce (structure) · birch bark (paper) · chanterelle (actions) ·
+   lingonberry (offers & prices) · blueberry (Lidl) · moss (S-market). */
 :root {
-  --bg: #f5f4f1;
-  --surface: #fbfaf8;
-  --surface-2: #eeede9;
-  --ink: #1f2220;
-  --muted: #6e716c;
-  --line: #e3e1dc;
-  --accent: #5b6f5e;
-  --accent-strong: #4a5c4d;
-  --accent-ink: #fbfaf8;
-  --accent-soft: #e8ece6;
-  --primary: #1f2220;
-  --primary-strong: #353936;
-  --primary-ink: #f5f4f1;
-  --warn: #7d5a26;
-  --warn-soft: #f4efe4;
-  --danger: #9b3b35;
-  --smarket: #4a5a4e;
-  --smarket-soft: #e9ece8;
-  --lidl: #4c6680;
-  --lidl-soft: #e6ebf0;
+  --bg: #f3eee6;
+  --surface: #fffcf7;
+  --surface-2: #ebe4d8;
+  --ink: #1c2a22;
+  --muted: #6b6a5f;
+  --line: #e0d7c8;
+  --primary: #1f3b2e;
+  --primary-strong: #2a4d3c;
+  --primary-ink: #f7f1e6;
+  --accent: #1f3b2e;
+  --accent-strong: #2a4d3c;
+  --accent-ink: #f7f1e6;
+  --accent-soft: #dfe7dc;
+  --chanterelle: #e3a02f;
+  --chanterelle-strong: #cf8b1c;
+  --chanterelle-soft: #f8e7c4;
+  --chanterelle-ink: #2b1c05;
+  --lingon: #b3263e;
+  --lingon-soft: #f6dcdc;
+  --warn: #8a5410;
+  --warn-soft: #f8ecd6;
+  --danger: #a3242f;
+  --smarket: #2f5a3f;
+  --smarket-soft: #dde9dc;
+  --lidl: #3a3f78;
+  --lidl-soft: #e1e2f1;
 }
 
+/* Forest night */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #161816;
-    --surface: #1c1f1d;
-    --surface-2: #242825;
-    --ink: #e9ebe7;
-    --muted: #9ca19a;
-    --line: #2e322f;
-    --accent: #a9bca8;
-    --accent-strong: #bfcfbe;
-    --accent-ink: #161816;
-    --accent-soft: #232b24;
-    --primary: #e9ebe7;
-    --primary-strong: #ffffff;
-    --primary-ink: #161816;
-    --warn: #d9b27a;
-    --warn-soft: #2e2719;
-    --danger: #e0918a;
-    --smarket: #b3c1b5;
-    --smarket-soft: #222824;
-    --lidl: #9fb6cd;
-    --lidl-soft: #1f2630;
+    --bg: #101913;
+    --surface: #17231b;
+    --surface-2: #1f2d23;
+    --ink: #f1ebdf;
+    --muted: #a8ab9c;
+    --line: #2a3a2f;
+    --primary: #e3a02f;
+    --primary-strong: #efb450;
+    --primary-ink: #1b1204;
+    --accent: #9cc3a3;
+    --accent-strong: #b4d4ba;
+    --accent-ink: #0f1a12;
+    --accent-soft: #203328;
+    --chanterelle: #e8ab43;
+    --chanterelle-strong: #f1bd61;
+    --chanterelle-soft: #3a2c12;
+    --chanterelle-ink: #1b1204;
+    --lingon: #ef7a8b;
+    --lingon-soft: #3a1c22;
+    --warn: #e7b86c;
+    --warn-soft: #33281a;
+    --danger: #f09096;
+    --smarket: #9cc3a3;
+    --smarket-soft: #1e3025;
+    --lidl: #a9adea;
+    --lidl-soft: #23254a;
   }
 }
 
@@ -65,6 +78,12 @@
   --color-primary: var(--primary);
   --color-primary-strong: var(--primary-strong);
   --color-primary-ink: var(--primary-ink);
+  --color-chanterelle: var(--chanterelle);
+  --color-chanterelle-strong: var(--chanterelle-strong);
+  --color-chanterelle-soft: var(--chanterelle-soft);
+  --color-chanterelle-ink: var(--chanterelle-ink);
+  --color-lingon: var(--lingon);
+  --color-lingon-soft: var(--lingon-soft);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
   --color-danger: var(--danger);
@@ -72,7 +91,7 @@
   --color-smarket-soft: var(--smarket-soft);
   --color-lidl: var(--lidl);
   --color-lidl-soft: var(--lidl-soft);
-  --font-display: "Jost Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 

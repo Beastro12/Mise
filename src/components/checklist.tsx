@@ -9,6 +9,7 @@ import { formatQty } from "@/lib/domain/units";
 import { formatPrice } from "@/lib/domain/offers";
 import { Badge, btn, cx, inputCls } from "./ui";
 import { SectionIcon } from "./icons";
+import { foodColor } from "@/lib/domain/food-colors";
 
 type Mode = "owner" | "share";
 type QueueEntry = { itemId: string; checked: boolean };
@@ -258,11 +259,11 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
           </details>
         </div>
       ) : null}
-      {message ? <p className="mb-5 border-l-2 border-accent py-1 pl-3 text-sm text-ink" data-testid="list-message">{message}</p> : null}
+      {message ? <p className="mb-5 rounded-2xl bg-accent-soft px-4 py-2.5 text-sm font-medium text-primary" data-testid="list-message">{message}</p> : null}
 
       {ask.length ? (
-        <div className="mb-8 border-y border-line py-4" data-testid="have-it">
-          <div className="mb-3 font-display text-lg font-[420]">Have it at home?</div>
+        <div className="mb-8 rounded-3xl bg-chanterelle-soft p-4" data-testid="have-it">
+          <div className="mb-3 font-display text-lg font-[680] text-chanterelle-ink">Have it at home?</div>
           <ul className="space-y-2">
             {ask.map((i) => (
               <li key={i.id} className="flex items-center justify-between gap-2">
@@ -287,20 +288,20 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
 
       {groups.map((g) => (
         <section key={g.storeId} className="mb-10" data-testid={`store-${g.storeId}`}>
-          <h2 className={cx("mb-4 flex items-baseline justify-between border-b pb-2 font-display text-[22px] font-[400]", g.storeId === "lidl" ? "border-lidl" : "border-smarket")}>
+          <h2 className={cx("mb-3 flex items-center justify-between rounded-2xl px-4 py-3 font-display text-[19px] font-[680] tracking-[-0.01em]", g.storeId === "lidl" ? "bg-lidl text-white" : "bg-primary text-primary-ink")}>
             <span className="flex items-center gap-2">
-              <span className={cx("h-2.5 w-2.5 rounded-full", g.storeId === "lidl" ? "bg-lidl" : "bg-smarket")} aria-hidden />
+              <span className={cx("h-2.5 w-2.5 rounded-full", g.storeId === "lidl" ? "bg-[#f2c94c]" : "bg-chanterelle")} aria-hidden />
               {storeName(g.storeId)}
             </span>
-            <span className="font-sans text-xs font-normal text-muted tabular">{g.sections.reduce((n, s) => n + s.items.length, 0)} items</span>
+            <span className="font-sans text-xs font-semibold opacity-80 tabular">{g.sections.reduce((n, s) => n + s.items.length, 0)} items</span>
           </h2>
           {g.sections.map((s) => (
             <div key={s.key} className="mb-5" data-testid={`section-${g.storeId}-${s.key}`}>
-              <div className="flex items-center gap-1.5 pb-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-                <SectionIcon section={s.key} />
+              <div className="flex items-center gap-1.5 px-1 pb-1.5 text-xs font-bold text-primary">
+                <SectionIcon section={s.key} className="h-4 w-4 text-chanterelle-strong" />
                 {SECTIONS.find((x) => x.key === s.key)?.fi}
               </div>
-              <ul className="divide-y divide-line border-y border-line">
+              <ul className="divide-y divide-line rounded-3xl bg-surface px-3 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]">
                 {s.items.map((i) => (
                   <Row
                     key={i.id}
@@ -388,7 +389,7 @@ function Row({
           <span
             className={cx(
               "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] text-[11px] transition-colors",
-              i.checked ? "border-accent bg-accent text-accent-ink" : "border-muted/50",
+              i.checked ? "border-primary bg-primary text-primary-ink" : "border-muted/50",
             )}
             aria-hidden
           >
@@ -396,7 +397,10 @@ function Row({
           </span>
           <span className="min-w-0 flex-1">
             <span className="flex items-baseline justify-between gap-2">
-              <span className={cx("font-medium", i.checked && "text-muted line-through")}>{cap(i.displayName)}</span>
+              <span className={cx("flex items-center gap-2 font-semibold", i.checked && "text-muted line-through")}>
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-black/10" style={{ background: foodColor(i.nameFi, i.section) }} aria-hidden />
+                {cap(i.displayName)}
+              </span>
               <span className={cx("shrink-0 tabular text-sm", i.checked && "text-muted")}>{formatQty(i) || "as needed"}</span>
             </span>
             {i.product || i.packs ? (
@@ -408,7 +412,13 @@ function Row({
               </span>
             ) : null}
             {i.storeReason ? (
-              <span className={cx("block text-xs", i.storeId === "lidl" ? "text-lidl" : "text-smarket")} data-testid="store-reason">
+              <span
+                className={cx(
+                  "mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                  i.offer ? "bg-lingon-soft text-lingon" : "bg-surface-2 text-muted",
+                )}
+                data-testid="store-reason"
+              >
                 {i.storeReason}
               </span>
             ) : null}

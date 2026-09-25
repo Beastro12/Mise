@@ -30,7 +30,7 @@ export default async function ReviewPage(props: PageProps<"/recipes/import/[batc
       ) : null}
       {images.length || files.length || urls.length ? (
         <div className="mb-4">
-          <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">Originals</div>
+          <div className="mb-1 text-xs font-bold text-primary">Originals</div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {images.map((o) => (
               <a key={o.id} href={`/api/originals/${o.id}`} target="_blank" rel="noreferrer" className="shrink-0">
