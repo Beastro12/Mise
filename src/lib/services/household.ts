@@ -13,25 +13,28 @@ export async function listHousehold(): Promise<HouseholdRow[]> {
   return db.select().from(schema.householdItems).orderBy(asc(schema.householdItems.name));
 }
 
+/** Add a refill, or update the existing one for the same ingredient (one per ingredient). */
 export async function addHousehold(input: { name: string; nameFi?: string; intervalDays: number; quantity: number | null; unit: string | null }) {
   const name = input.name.trim();
   if (!name) throw new Error("Name is required.");
-  let nameFi = input.nameFi?.trim().toLowerCase();
-  let section = "muut";
-  if (!nameFi) {
-    const n = (await normalizeMany([name])).get(name)!;
-    nameFi = n.nameFi;
-    section = n.category;
-  }
-  const db = await getDb();
-  await db.insert(schema.householdItems).values({
+  const given = input.nameFi?.trim().toLowerCase();
+  const n = (await normalizeMany([given || name])).get(given || name)!;
+  const nameFi = given || n.nameFi;
+  const values = {
     name,
     nameFi,
     intervalDays: Math.max(1, Math.round(input.intervalDays || 14)),
     quantity: input.quantity,
     unit: input.quantity == null ? null : (input.unit ?? "kpl"),
-    section: toSectionKey(section),
-  });
+    section: toSectionKey(n.category),
+  };
+  const db = await getDb();
+  const [existing] = await db.select().from(schema.householdItems).where(eq(schema.householdItems.nameFi, nameFi));
+  if (existing) {
+    await db.update(schema.householdItems).set({ ...values, active: true }).where(eq(schema.householdItems.id, existing.id));
+  } else {
+    await db.insert(schema.householdItems).values(values);
+  }
 }
 
 export async function updateHousehold(id: string, patch: { intervalDays?: number; active?: boolean; lastBoughtOn?: string | null }) {
@@ -48,6 +51,13 @@ export async function updateHousehold(id: string, patch: { intervalDays?: number
 
 export async function markBought(id: string, on = todayHelsinki()) {
   await updateHousehold(id, { lastBoughtOn: on });
+}
+
+/** Undo a "bought today" (an item checked off by mistake): back to due. */
+export async function unmarkBoughtToday(id: string, today = todayHelsinki()) {
+  const db = await getDb();
+  const [row] = await db.select().from(schema.householdItems).where(eq(schema.householdItems.id, id));
+  if (row?.lastBoughtOn === today) await updateHousehold(id, { lastBoughtOn: null });
 }
 
 export async function deleteHousehold(id: string) {

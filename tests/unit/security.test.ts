@@ -1,10 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-
-vi.mock("server-only", () => ({}));
-vi.mock("@/db", () => ({}));
-
-const { isPrivateIp } = await import("@/lib/import/fetch-page");
-const { addFailure, isLocked, LOGIN_MAX_FAILURES, LOGIN_WINDOW_MS } = await import("@/lib/login-throttle");
+import { describe, expect, it } from "vitest";
+import { isPrivateIp } from "@/lib/import/fetch-page";
+import { addFailure, isLocked, LOGIN_MAX_FAILURES, LOGIN_WINDOW_MS } from "@/lib/login-throttle";
 
 describe("URL import: private address guard", () => {
   it("blocks loopback, private, link-local, CGNAT and reserved ranges", () => {

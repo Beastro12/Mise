@@ -20,9 +20,11 @@ describe("S-kaupat helper: cart plan", () => {
     expect(missing.map((m: { ingredient: string }) => m.ingredient)).toEqual(["tilli", "peruna"]);
   });
 
-  it("drops the 2nd choice when substitutions are off", () => {
-    const { steps } = planCart({ ...order, delivery: { ...order.delivery, substitutions: "none" } });
-    expect(steps[0].choices).toHaveLength(1);
+  it("drops the 2nd choice unless substitutions use my 2nd choice", () => {
+    for (const substitutions of ["none", "store"]) {
+      const { steps } = planCart({ ...order, delivery: { ...order.delivery, substitutions } });
+      expect(steps[0].choices, substitutions).toHaveLength(1);
+    }
   });
 });
 

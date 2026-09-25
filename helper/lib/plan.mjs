@@ -9,7 +9,9 @@ export function planCart(order) {
   const steps = [];
   const missing = [...(order.unmapped ?? []).map((u) => ({ ingredient: u.ingredient, reason: "no product matched in Aitta" }))];
   for (const it of order.items ?? []) {
-    const choices = [it.primary, order.delivery?.substitutions === "none" ? null : it.alternate].filter(Boolean).map((p) => ({
+    // Only "alternate" uses your own 2nd choice; "store" leaves replacements to S-kaupat's setting.
+    const useAlternate = (order.delivery?.substitutions ?? "alternate") === "alternate";
+    const choices = [it.primary, useAlternate ? it.alternate : null].filter(Boolean).map((p) => ({
       ...p,
       query: p.ean || p.s_kaupat_product_id || p.name,
       mock: p.source === "mock",

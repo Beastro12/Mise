@@ -172,3 +172,14 @@ S-kaupat's product data still can't be read from a server (D1), and no endpoint 
 - **Link-import fetch guard** uses Node's `net.BlockList`. It covers IPv4-mapped IPv6 (`[::ffff:169.254.169.254]`), NAT64, CGNAT, multicast and reserved ranges. Photo downloads stream with the 6 MB cap and one 12 s deadline covering all redirects and the body. Known limit: DNS is checked before the fetch, not pinned, so a DNS-rebinding host could still slip through. That is acceptable for a single-owner app whose URL import needs the owner's login.
 - **Login attempt limit:** 10 wrong passcodes within 15 minutes pause logins for the rest of that window. The counter is stored in the database, because serverless instances don't share memory. Logged-in devices keep their 180-day cookie.
 - **Headers:** `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` and a restrictive `Permissions-Policy` on every response. CI runs with a read-only `GITHUB_TOKEN`.
+
+### D40. Review fixes: refills and the Mac helper
+- **One row per ingredient.** A due refill whose ingredient is already on the week's list (to buy, a staple question, or covered by the pantry) merges into that row rather than adding a second one. Checking that row off counts as buying the refill. Unchecking on the same day undoes it (back to due). The household list keeps one item per ingredient: adding it again updates it. Its section comes from the vocabulary even for one-tap suggestions. Covered by a PGlite integration test (`tests/unit/household-list.test.ts`).
+- **Cart helper:**
+  - It only acts on an EAN search with exactly one result, and presses "+" inside that product's card (otherwise it asks you).
+  - The add-button pattern no longer matches "Lue lisää".
+  - The never-order guard also refuses buttons without readable text.
+  - "Leave it to S-kaupat" no longer uses your 2nd choice.
+  - It warns that quantities add to what's already in the cart.
+  - The browser profile folder is readable only by you.
+- **Product parser:** prefers the page's own Product over "related products" (URL match, then offer + GTIN). It reads the first offer that has a price, and only accepts EANs with a valid GS1 check digit.

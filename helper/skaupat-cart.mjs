@@ -54,7 +54,9 @@ async function main() {
 
   const { ctx, page } = await openBrowser({ useChrome });
   await page.goto(SITE.home);
-  await ask("Log in to S-kaupat in the browser window and make sure your store is selected. Press Enter when ready.");
+  await ask(
+    "Log in to S-kaupat in the browser window and make sure your store is selected.\n   If the cart still has items from an earlier run, empty it first: quantities are added on top. Press Enter when ready.",
+  );
 
   const added = [];
   const viaSecond = [];
@@ -111,6 +113,7 @@ async function main() {
   if (viaSecond.length) log(`   2nd choices: ${viaSecond.join("; ")}`);
   if (skipped.length) log(`   Not in cart: ${skipped.join(", ")}`);
   log(`   Delivery: ${slotNote}`);
+  if (d.substitutions === "store") log("   Replacements: you chose S-kaupat's own setting; check it in the cart before ordering.");
   await ask("Review the cart and delivery in the browser and place the order yourself. Press Enter here to close the browser.");
   await ctx.close();
 }

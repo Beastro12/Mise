@@ -14,7 +14,7 @@ export const SITE = {
   /** Search results page for a query (EAN, product id or name). UNVERIFIED */
   search: (q) => `https://www.s-kaupat.fi/tuotteet?queryString=${encodeURIComponent(q)}`,
   text: {
-    addToCart: /lisää (ostos)?koriin|lisää$|add to (cart|basket)/i,
+    addToCart: /lisää (ostos)?koriin|add to (cart|basket)/i,
     increase: /lisää yksi|kasvata|increase|^\+$/i,
     soldOut: /loppu|ei saatavilla|tilapäisesti|sold out|not available/i,
     toCheckout: /siirry kassalle|kassalle|jatka tilaukseen|to checkout/i,
@@ -23,9 +23,13 @@ export const SITE = {
   },
 };
 
-/** Click only if the element's text is allowed; never order or pay. */
+/**
+ * Click only if the element's text is readable and allowed; never order or pay.
+ * Fails closed: an element whose text can't be read is not clicked.
+ */
 export async function safeClick(locator) {
-  const text = (await locator.innerText().catch(() => "")) || (await locator.getAttribute("aria-label").catch(() => "")) || "";
+  const text = ((await locator.innerText().catch(() => "")) || (await locator.getAttribute("aria-label").catch(() => "")) || "").trim();
+  if (!text) throw new Error("Refusing to click a button without readable text.");
   if (isForbidden(text)) throw new Error(`Refusing to click "${text}": placing the order is yours to do.`);
   await locator.click();
 }
@@ -40,17 +44,27 @@ export async function addProduct(page, choice, quantity) {
   const main = page.locator("main").first();
   const scope = (await main.count()) ? main : page.locator("body");
   const addButtons = scope.getByRole("button", { name: SITE.text.addToCart });
-  if ((await addButtons.count()) === 0) {
+  const hits = await addButtons.count();
+  if (hits === 0) {
     const bodyText = await scope.innerText().catch(() => "");
     return SITE.text.soldOut.test(bodyText) ? "sold_out" : "not_found";
   }
-  // First search hit. With an EAN query the first hit should be the product.
-  await safeClick(addButtons.first());
+  // An EAN search should find exactly one product. More than one: let the human pick.
+  if (hits > 1) throw new Error(`${hits} products matched the search`);
+  const add = addButtons.first();
+  // Mark the product's card so "+" is pressed on this product, not another one on the page.
+  const hasCard = await add.evaluate((el) => {
+    document.querySelectorAll("[data-aitta-card]").forEach((n) => n.removeAttribute("data-aitta-card"));
+    const card = el.closest("article, li, [data-product-id], [data-testid*='product' i]");
+    card?.setAttribute("data-aitta-card", "1");
+    return !!card;
+  });
+  await safeClick(add);
   for (let i = 1; i < quantity; i++) {
     await page.waitForTimeout(400);
-    const plus = scope.getByRole("button", { name: SITE.text.increase }).first();
-    if (!(await plus.count())) throw new Error("quantity button not found");
-    await safeClick(plus);
+    const pluses = (hasCard ? page.locator("[data-aitta-card]") : scope).getByRole("button", { name: SITE.text.increase });
+    if ((await pluses.count()) !== 1) throw new Error(`added 1, but couldn't find this product's "+" button to reach ${quantity}`);
+    await safeClick(pluses.first());
   }
   return "added";
 }

@@ -13,7 +13,7 @@ import { getStaples, normalizeMany } from "./vocab";
 import { listCurrentOffers, toOfferInfo } from "./offers";
 import { addToPantry } from "./pantry";
 import { refreshMappedProducts } from "./products";
-import { dueHousehold, markBought } from "./household";
+import { dueHousehold, markBought, unmarkBoughtToday } from "./household";
 
 export type ItemRow = typeof schema.shoppingItems.$inferSelect;
 export type ListRow = typeof schema.shoppingLists.$inferSelect;
@@ -113,6 +113,12 @@ export async function generateListForPlan(planId: string): Promise<string> {
     today,
   });
 
+  // Due refills, one per ingredient. If the week's list already has that ingredient
+  // (to buy, to ask about, or covered by the pantry), the refill merges into that row,
+  // and checking the row off still counts as buying the refill.
+  const dueByName = new Map<string, (typeof due)[number]>();
+  for (const h of due) if (!dueByName.has(h.nameFi)) dueByName.set(h.nameFi, h);
+
   await db.transaction(async (tx) => {
     if (!list) {
       const [created] = await tx
@@ -151,6 +157,7 @@ export async function generateListForPlan(planId: string): Promise<string> {
             sources: b.sources,
             state,
             note: b.note,
+            householdItemId: dueByName.get(b.nameFi)?.id ?? null,
             checked: prev?.checked ?? false,
             checkedAt: prev?.checkedAt ?? null,
             movedToPantry: prev?.movedToPantry ?? false,
@@ -159,9 +166,9 @@ export async function generateListForPlan(planId: string): Promise<string> {
       );
     }
     // Household refills due before the next shop: suggested, you decide per item.
-    const inList = new Set(built.filter((b) => b.state === "none").map((b) => b.nameFi));
+    const inList = new Set(built.map((b) => b.nameFi));
     const prevRefill = new Map(previous.filter((p) => p.householdItemId).map((p) => [p.householdItemId!, p]));
-    const refills = due.filter((h) => !inList.has(h.nameFi));
+    const refills = [...dueByName.values()].filter((h) => !inList.has(h.nameFi));
     if (refills.length) {
       const ruleOf = new Map(rules.map((r) => [r.nameFi, r.storeId]));
       await tx.insert(schema.shoppingItems).values(
@@ -263,8 +270,11 @@ async function itemInList(itemId: string, listId: string) {
 
 export async function setChecked(listId: string, itemId: string, checked: boolean) {
   const item = await itemInList(itemId, listId);
-  // Buying a household refill resets its countdown.
-  if (checked && item.householdItemId) await markBought(item.householdItemId);
+  // Buying a household refill resets its countdown; unchecking the same day undoes it.
+  if (item.householdItemId && checked !== item.checked) {
+    if (checked) await markBought(item.householdItemId);
+    else await unmarkBoughtToday(item.householdItemId);
+  }
   const db = await getDb();
   await db
     .update(schema.shoppingItems)
@@ -339,7 +349,8 @@ export async function moveCheckedToPantry(listId: string) {
     .from(schema.shoppingItems)
     .where(and(eq(schema.shoppingItems.listId, listId), eq(schema.shoppingItems.checked, true), eq(schema.shoppingItems.movedToPantry, false)));
   for (const it of items) {
-    if (it.householdItemId) continue; // refills (toilet paper…) don't belong in the food pantry
+    // Pure refills (toilet paper…) don't belong in the food pantry; a recipe row a refill merged into does.
+    if (it.householdItemId && !it.sources.length) continue;
     await addToPantry({ name: it.displayName, nameFi: it.nameFi, quantity: it.quantity, unit: it.unit, category: it.section });
   }
   if (items.length) {

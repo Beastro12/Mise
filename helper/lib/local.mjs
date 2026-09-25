@@ -29,6 +29,9 @@ export function writeConfig(cfg) {
 export async function openBrowser({ useChrome = true } = {}) {
   const { chromium } = await import("@playwright/test");
   const profile = path.join(AITTA_DIR, "skaupat-profile");
+  // The profile holds your S-kaupat login cookies: readable only by you.
+  fs.mkdirSync(profile, { recursive: true, mode: 0o700 });
+  fs.chmodSync(profile, 0o700);
   const ctx = await chromium.launchPersistentContext(profile, {
     headless: false,
     viewport: null,

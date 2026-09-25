@@ -45,18 +45,41 @@ function jsonLdBlocks(html) {
   return out;
 }
 
-function findProduct(node) {
-  if (!node || typeof node !== "object") return null;
+function collectProducts(node, out = []) {
+  if (!node || typeof node !== "object") return out;
   if (Array.isArray(node)) {
-    for (const n of node) {
-      const hit = findProduct(n);
-      if (hit) return hit;
-    }
-    return null;
+    for (const n of node) collectProducts(n, out);
+    return out;
   }
   const type = node["@type"];
-  if (type === "Product" || (Array.isArray(type) && type.includes("Product"))) return node;
-  return findProduct(node["@graph"]);
+  if (type === "Product" || (Array.isArray(type) && type.includes("Product"))) out.push(node);
+  collectProducts(node["@graph"], out);
+  return out;
+}
+
+const samePage = (a, b) => {
+  try {
+    const x = new URL(a);
+    const y = new URL(b);
+    return x.host === y.host && x.pathname.replace(/\/$/, "") === y.pathname.replace(/\/$/, "");
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * The page's own Product. Pages often also carry "related products" as
+ * Product nodes, so prefer the one whose url/@id is this page, then one with
+ * an offer and a GTIN, and only then the first.
+ */
+function findProduct(blocks, pageUrl) {
+  const all = collectProducts(blocks);
+  return (
+    all.find((p) => pageUrl && (samePage(p.url, pageUrl) || samePage(p["@id"], pageUrl))) ??
+    all.find((p) => p.offers && (p.gtin13 || p.gtin || p.gtin8 || p.gtin14)) ??
+    all[0] ??
+    null
+  );
 }
 
 const meta = (html, prop) => html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']*)["']`, "i"))?.[1] ?? null;
@@ -64,22 +87,35 @@ const meta = (html, prop) => html.match(new RegExp(`<meta[^>]+(?:property|name)=
 const decode = (s) =>
   s == null ? null : s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
 
-const eanOf = (s) => (s && /^\d{8,14}$/.test(String(s).trim()) ? String(s).trim() : null);
+/** GS1 check digit: the last digit makes the weighted sum (3,1,3,1… from the right) a multiple of 10. */
+export function validGtin(code) {
+  if (!/^(\d{8}|\d{12}|\d{13}|\d{14})$/.test(code)) return false;
+  const digits = [...code].map(Number);
+  const check = digits.pop();
+  const sum = digits.reverse().reduce((acc, d, i) => acc + d * (i % 2 === 0 ? 3 : 1), 0);
+  return (10 - (sum % 10)) % 10 === check;
+}
+
+const eanOf = (s) => {
+  const v = s == null ? "" : String(s).trim();
+  return validGtin(v) ? v : null;
+};
 
 /**
  * Product facts in the shape POST /api/helper/products expects, or null when
  * the page doesn't identify a product.
  */
 export function parseProductPage(html, url) {
-  const ld = findProduct(jsonLdBlocks(html));
-  const urlEan = String(url ?? "").match(/(?:^|[^\d])(\d{13}|\d{8})(?:[^\d]|$)/)?.[1] ?? null;
+  const ld = findProduct(jsonLdBlocks(html), url);
+  const urlEan = eanOf(String(url ?? "").match(/(?:^|[^\d])(\d{13}|\d{8})(?:[^\d]|$)/)?.[1]);
   const name = decode(ld?.name ?? meta(html, "og:title") ?? html.match(/<title>([^<]*)<\/title>/i)?.[1] ?? null);
   if (!name) return null;
   const ean = eanOf(ld?.gtin13) ?? eanOf(ld?.gtin) ?? eanOf(ld?.gtin14) ?? eanOf(ld?.gtin8) ?? eanOf(ld?.productID) ?? eanOf(ld?.sku) ?? urlEan;
   const externalId = String(ld?.sku ?? ld?.productID ?? ean ?? "").trim() || null;
   if (!ean && !externalId) return null;
   const brand = decode(typeof ld?.brand === "string" ? ld.brand : (ld?.brand?.name ?? null));
-  const offer = Array.isArray(ld?.offers) ? ld.offers[0] : ld?.offers;
+  const offers = Array.isArray(ld?.offers) ? ld.offers : ld?.offers ? [ld.offers] : [];
+  const offer = offers.find((o) => o?.price != null || o?.lowPrice != null);
   const price = num(offer?.price ?? offer?.lowPrice ?? meta(html, "product:price:amount") ?? "");
   const pack = packFromName(name);
   return {
