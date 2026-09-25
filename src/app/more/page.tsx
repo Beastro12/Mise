@@ -21,7 +21,7 @@ export default function MorePage() {
   return (
     <div>
       <PageTitle>More</PageTitle>
-      <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+      <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
         {LINKS.map((l) => (
           <li key={l.href}>
             <Link href={l.href} className="block px-4 py-3 hover:bg-surface-2">
@@ -32,7 +32,7 @@ export default function MorePage() {
         ))}
       </ul>
       <Section title="Status">
-        <dl className="space-y-1.5 rounded-xl border border-line bg-surface p-4 text-sm">
+        <dl className="space-y-1.5 rounded-lg border border-line bg-surface p-4 text-sm">
           <div className="flex justify-between gap-2">
             <dt>Database</dt>
             <dd>{process.env.DATABASE_URL ? "Postgres (DATABASE_URL)" : "Local PGlite (.data/)"}</dd>

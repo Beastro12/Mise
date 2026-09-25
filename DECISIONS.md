@@ -120,3 +120,6 @@ The brief left `S_MARKET_STORE = <FILL IN>`. The app seeds "S-market (set your s
 | lidl.fi weekly offers | **UNVERIFIED → not built** | lidl.fi blocked; leaflet photo/text import used instead |
 | Supabase Postgres | **VERIFIED equivalent** | full e2e suite passed against a local Postgres 16 with the same driver settings |
 | Supabase Storage | **UNVERIFIED live** | follows supabase-js docs; local storage path tested |
+
+### D30. Name and visual identity: Aitta, "birch & frost"
+Renamed from "Mise FI" (the name belongs to an existing UK app) to **Aitta**, the Finnish word for a traditional food storehouse, chosen by you from a shortlist. **Not trademark- or domain-checked** (not possible from the build environment). Visuals: birch-paper background (#F4F2EE), charcoal ink (#22262A), one fjord-blue accent (#3E6A86), moss for S-market, lake blue for Lidl, hairline borders, squarer corners, Inter variable font bundled from npm (no Google Fonts request at runtime). Dark mode "frost night" follows the system setting. The icon is a line drawing of an aitta on stilts. Renamed internals too: cookie `aitta_session` (existing logins must sign in again), localStorage keys `aitta:*`, service-worker cache `aitta-v1`, default bucket `aitta-originals`.

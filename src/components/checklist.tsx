@@ -40,8 +40,8 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export function Checklist({ initial, mode, token }: { initial: ClientList; mode: Mode; token?: string }) {
   const base = mode === "owner" ? `/api/lists/${initial.id}` : `/api/share/${token}`;
-  const snapKey = `mise:list:${initial.id}`;
-  const queueKey = `mise:queue:${initial.id}`;
+  const snapKey = `aitta:list:${initial.id}`;
+  const queueKey = `aitta:queue:${initial.id}`;
 
   const [list, setList] = useState<ClientList>(initial);
   const [online, setOnline] = useState(true);
@@ -253,7 +253,7 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
       {message ? <p className="mb-3 rounded-lg bg-accent-soft px-3 py-2 text-sm text-accent" data-testid="list-message">{message}</p> : null}
 
       {ask.length ? (
-        <div className="mb-4 rounded-xl border border-line bg-warn-soft/50 p-3" data-testid="have-it">
+        <div className="mb-4 rounded-lg border border-line bg-warn-soft/50 p-3" data-testid="have-it">
           <div className="mb-2 text-sm font-semibold">Have it?</div>
           <ul className="space-y-1.5">
             {ask.map((i) => (
@@ -275,18 +275,21 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
         </div>
       ) : null}
 
-      {groups.length === 0 ? <p className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-muted">Nothing to buy.</p> : null}
+      {groups.length === 0 ? <p className="rounded-lg border border-dashed border-line p-6 text-center text-sm text-muted">Nothing to buy.</p> : null}
 
       {groups.map((g) => (
         <section key={g.storeId} className="mb-6" data-testid={`store-${g.storeId}`}>
-          <h2 className={cx("mb-2 flex items-center justify-between rounded-lg px-3 py-2 font-semibold", g.storeId === "lidl" ? "bg-lidl-soft text-lidl" : "bg-smarket-soft text-smarket")}>
-            <span>{storeName(g.storeId)}</span>
-            <span className="text-xs font-medium tabular">{g.sections.reduce((n, s) => n + s.items.length, 0)} items</span>
+          <h2 className={cx("mb-3 flex items-baseline justify-between border-b-2 pb-2 text-[15px] font-medium", g.storeId === "lidl" ? "border-lidl" : "border-smarket")}>
+            <span className="flex items-center gap-2">
+              <span className={cx("h-2 w-2 rounded-full", g.storeId === "lidl" ? "bg-lidl" : "bg-smarket")} aria-hidden />
+              {storeName(g.storeId)}
+            </span>
+            <span className="text-xs font-normal text-muted tabular">{g.sections.reduce((n, s) => n + s.items.length, 0)} items</span>
           </h2>
           {g.sections.map((s) => (
             <div key={s.key} className="mb-3" data-testid={`section-${g.storeId}-${s.key}`}>
-              <div className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-muted">{SECTIONS.find((x) => x.key === s.key)?.fi}</div>
-              <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+              <div className="px-1 pb-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">{SECTIONS.find((x) => x.key === s.key)?.fi}</div>
+              <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
                 {s.items.map((i) => (
                   <Row
                     key={i.id}

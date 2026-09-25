@@ -24,8 +24,8 @@ export default async function PantryPage() {
           if (!inSection.length) return null;
           return (
             <div key={s.key}>
-              <div className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-muted">{s.fi}</div>
-              <ul className="divide-y divide-line rounded-xl border border-line bg-surface" data-testid="pantry-list">
+              <div className="px-1 pb-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">{s.fi}</div>
+              <ul className="divide-y divide-line rounded-lg border border-line bg-surface" data-testid="pantry-list">
                 {inSection.map((i) => (
                   <li key={i.id} className="px-3 py-2" data-testid="pantry-item" data-name={i.nameFi}>
                     <details>

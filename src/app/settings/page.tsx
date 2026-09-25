@@ -31,7 +31,7 @@ export default async function SettingsPage() {
         {rules.length === 0 ? (
           <Empty>No rules. On a list item choose “Always buy X at Lidl”.</Empty>
         ) : (
-          <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
             {rules.map((r) => (
               <li key={r.nameFi} className="flex items-center justify-between px-3 py-2">
                 <span>

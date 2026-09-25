@@ -1,7 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { config } from "./env";
 
-export const SESSION_COOKIE = "mise_session";
+export const SESSION_COOKIE = "aitta_session";
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 180; // 180 days
 
 export function authEnabled(): boolean {
@@ -9,7 +9,7 @@ export function authEnabled(): boolean {
 }
 
 function secret(): string {
-  return config.sessionSecret || createHash("sha256").update(`mise-fi:${config.passcode ?? ""}`).digest("hex");
+  return config.sessionSecret || createHash("sha256").update(`aitta:${config.passcode ?? ""}`).digest("hex");
 }
 
 function mac(payload: string): string {

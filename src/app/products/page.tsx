@@ -41,7 +41,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
         {maps.length === 0 ? (
           <Empty>No matches yet. Open a shopping list item and tap “Match product”.</Empty>
         ) : (
-          <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
             {maps.map(({ map, product }) => (
               <li key={map.id} className="flex items-center justify-between gap-2 px-3 py-2">
                 <div className="min-w-0">
@@ -75,7 +75,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
 
       {current ? (
         <Card className="mb-4">
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">Current match</div>
+          <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">Current match</div>
           <ProductLine p={current.product} />
         </Card>
       ) : null}
@@ -96,7 +96,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
       {shown.length === 0 ? (
         <Empty>No candidates. Add the product by hand below (copy the details from the S-kaupat app).</Empty>
       ) : (
-        <ul className="divide-y divide-line rounded-xl border border-line bg-surface" data-testid="candidates">
+        <ul className="divide-y divide-line rounded-lg border border-line bg-surface" data-testid="candidates">
           {shown.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-2 px-3 py-2">
               <ProductLine p={p} />

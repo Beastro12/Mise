@@ -1,4 +1,6 @@
-# Mise FI
+# Aitta
+
+*Aitta* is the old Finnish storehouse on stilts where a household kept its food.
 
 A personal meal planner and shopping list for one household in Turku. It plans the week from your own recipes and splits the shopping list between **S-market** (S-kaupat) and **Lidl Vähäheikkilä**. The UI is in English; ingredient names are Finnish, because that's how you search in the store.
 
@@ -6,6 +8,8 @@ A personal meal planner and shopping list for one household in Turku. It plans t
 - **Plan:** pick recipes yourself, or have a week proposed (no repeats from the last 2 weeks, protein variety, pantry items, this week's Lidl offers). You can swap one meal, lock meals and regenerate the rest, and mark meals cooked.
 - **List:** ingredients are merged across recipes (2 dl + 100 ml → 3 dl), and the pantry is subtracted. Staples trigger a "Have it?" question instead of being added. Pack counts come from the product you matched. Everything defaults to S-market and moves to Lidl only on a (cheaper) Lidl offer, with the reason shown. Sections follow each store's walking order. The checklist works offline, and checked items go to the pantry in one tap. Your spouse can use the same list through a share link.
 - **Stores:** Lidl offers come from leaflet photos or pasted text. S-kaupat product data is a **mock** until the real site can be verified (see [DECISIONS.md](DECISIONS.md)).
+
+Design: “birch & frost”: birch-paper background, charcoal ink, one fjord-blue accent, hairlines, Inter (self-hosted via `@fontsource-variable/inter`); a “frost night” dark theme follows the phone setting. The GitHub repo is still called `Mise`; the app itself is Aitta.
 
 Docs: [PLAN.md](PLAN.md) (architecture, data model) · [DECISIONS.md](DECISIONS.md) (choices, and which data sources are verified or mocked) · [NEXT_SESSION.md](NEXT_SESSION.md) (cart-automation hand-off).
 
@@ -34,7 +38,7 @@ To try it on your phone over wifi: `DEV_ORIGINS=192.168.x.y npm run dev -- -H 0.
 | `DATABASE_URL` | **yes on Vercel** | Postgres connection string (Supabase transaction pooler, port 6543). |
 | `DB_AUTO_MIGRATE` | no | `1` runs migrations and seed on first connection. |
 | `BLOB_STORE` | **`supabase` on Vercel** | `local` (`./.data/uploads`) or `supabase`. |
-| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET` | with `BLOB_STORE=supabase` | Private bucket for recipe photos and files (default name `mise-originals`). |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET` | with `BLOB_STORE=supabase` | Private bucket for recipe photos and files (default name `aitta-originals`). |
 | `S_MARKET_STORE`, `S_KAUPAT_STORE_ID` | no | Your S-market or Prisma. Seeded once; editable later under More → Stores. |
 | `S_KAUPAT_ADAPTER` | no | `mock` (invented demo catalogue) or `none`. Default: `mock` in dev, `none` in production. |
 
@@ -53,14 +57,14 @@ The e2e suite imports a recipe from a URL (served by a local fixture server), pl
 
 1. **Supabase:** create a project.
    - Database → Connect → copy the **Transaction pooler** URI (port 6543). That is `DATABASE_URL`.
-   - Storage → create a **private** bucket `mise-originals`.
+   - Storage → create a **private** bucket `aitta-originals`.
    - Project Settings → API → copy the project URL and the `service_role` key.
 2. **Create the tables and seed data** from your machine:
    ```bash
    DATABASE_URL='postgres://…:6543/postgres' npm run db:migrate
    DATABASE_URL='postgres://…:6543/postgres' S_MARKET_STORE='S-market …, Turku' npm run db:seed
    ```
-3. **Vercel:** import the Git repo (framework: Next.js, default build command). Set the environment variables: `APP_PASSCODE`, `SESSION_SECRET`, `ANTHROPIC_API_KEY`, `DATABASE_URL`, `BLOB_STORE=supabase`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET=mise-originals`. Deploy.
+3. **Vercel:** import the Git repo (framework: Next.js, default build command). Set the environment variables: `APP_PASSCODE`, `SESSION_SECRET`, `ANTHROPIC_API_KEY`, `DATABASE_URL`, `BLOB_STORE=supabase`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET=aitta-originals`. Deploy.
 4. Open the site on your phone, log in, then **Add to Home Screen**. Open the shopping list once while online so it also works offline in the store.
 5. Share a list: on the list press **Share** and send the link to your spouse. The link only allows viewing and checking off that one list. **New link** revokes the old one.
 

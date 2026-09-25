@@ -34,7 +34,7 @@ export default async function StoresPage() {
       </Card>
       {(["smarket", "lidl"] as StoreId[]).map((sid) => (
         <Section key={sid} title={`Walking order · ${sid === "lidl" ? "Lidl" : "S-market"}`}>
-          <ol className="divide-y divide-line rounded-xl border border-line bg-surface" data-testid={`order-${sid}`}>
+          <ol className="divide-y divide-line rounded-lg border border-line bg-surface" data-testid={`order-${sid}`}>
             {orders[sid].map((key, i) => (
               <li key={key} className="flex items-center justify-between px-3 py-2">
                 <span>

@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 const PORT = 3200;
-const dataDir = path.join(os.tmpdir(), `mise-e2e-${Date.now()}`);
+const dataDir = path.join(os.tmpdir(), `aitta-e2e-${Date.now()}`);
 
 export default defineConfig({
   testDir: "tests/e2e",

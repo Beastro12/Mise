@@ -115,7 +115,7 @@ export async function generateListForPlan(planId: string): Promise<string> {
     if (!list) {
       const [created] = await tx
         .insert(schema.shoppingLists)
-        .values({ planId, name: data.plan.name || `Week of ${data.plan.weekStart}`, shareToken: newToken() })
+        .values({ planId, name: data.plan.name || `Week of ${Number(data.plan.weekStart.slice(8, 10))}.${Number(data.plan.weekStart.slice(5, 7))}.`, shareToken: newToken() })
         .returning();
       list = created;
     }

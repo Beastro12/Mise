@@ -131,7 +131,7 @@ export function RecipeEditor({ initial, mode, index }: { initial: RecipeDraft; m
   );
 
   return (
-    <div className="rounded-xl border border-line bg-surface p-4" data-testid="recipe-editor">
+    <div className="rounded-lg border border-line bg-surface p-4" data-testid="recipe-editor">
       {mode.kind === "draft" ? header : null}
       {!open ? null : (
         <div className={cx("space-y-4", mode.kind === "draft" && "mt-4")}>

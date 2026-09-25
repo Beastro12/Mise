@@ -45,7 +45,7 @@ export async function fetchPage(input: string): Promise<FetchedPage> {
         redirect: "manual",
         signal: ctrl.signal,
         headers: {
-          "user-agent": "Mozilla/5.0 (compatible; MiseFI/1.0; personal recipe import)",
+          "user-agent": "Mozilla/5.0 (compatible; Aitta/1.0; personal recipe import)",
           accept: "text/html,application/xhtml+xml",
           "accept-language": "fi,en;q=0.8",
         },

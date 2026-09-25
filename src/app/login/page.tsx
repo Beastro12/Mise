@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, SESSION_MAX_AGE, authEnabled, checkPasscode, signSession } from "@/lib/auth";
 import { Button, Card, Field, inputCls } from "@/components/ui";
+import { AittaMark } from "@/components/logo";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +32,10 @@ export default async function LoginPage(props: PageProps<"/login">) {
   const sp = await props.searchParams;
   if (!authEnabled()) redirect("/");
   return (
-    <div className="mx-auto mt-16 max-w-sm">
-      <h1 className="mb-1 text-3xl font-semibold tracking-tight">Mise FI</h1>
-      <p className="mb-6 text-sm text-muted">Meal planner · S-market + Lidl Vähäheikkilä</p>
+    <div className="mx-auto mt-20 max-w-sm">
+      <AittaMark className="mb-5 h-10 w-10 text-accent" />
+      <h1 className="text-[34px] font-medium leading-none tracking-[-0.03em]">Aitta</h1>
+      <p className="mt-2 mb-8 text-sm text-muted">Meal planner · S-market + Lidl Vähäheikkilä</p>
       <Card>
         <form action={login} className="space-y-4">
           <input type="hidden" name="next" value={safeNext(sp.next)} />

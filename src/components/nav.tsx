@@ -15,7 +15,7 @@ export function BottomNav() {
   const path = usePathname();
   if (path.startsWith("/share") || path.startsWith("/login")) return null;
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/90 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
       <ul className="mx-auto flex max-w-xl">
         {TABS.map((t) => {
           const active = path === t.href || path.startsWith(`${t.href}/`) || (t.href === "/more" && /^\/(stores|settings|history|products)/.test(path));
@@ -23,9 +23,9 @@ export function BottomNav() {
             <li key={t.href} className="flex-1">
               <Link
                 href={t.href}
-                className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium ${active ? "text-accent" : "text-muted"}`}
+                className={`flex flex-col items-center gap-1 pt-2.5 pb-2 text-[10.5px] font-medium tracking-[0.04em] ${active ? "text-accent" : "text-muted"}`}
               >
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={t.label === "More" ? 3 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={t.label === "More" ? 2.6 : 1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d={t.icon} />
                 </svg>
                 {t.label}

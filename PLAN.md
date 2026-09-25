@@ -1,4 +1,4 @@
-# Mise FI: plan
+# Aitta: plan
 
 A personal meal planner and shopping list for one household in Turku. It plans meals
 from your own recipe catalogue and builds a shopping list split between **S-market**

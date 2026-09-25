@@ -1,12 +1,12 @@
 /*
- * Mise FI service worker: keeps the shopping list usable offline in the store.
+ * Aitta service worker: keeps the shopping list usable offline in the store.
  *  - /_next/static and icons: cache-first (immutable, hashed)
  *  - page navigations: network-first, falling back to the cached copy
  *    (so a list you opened at home still loads with no signal)
  *  - API calls: network only (the checklist keeps its own offline copy and
  *    queues check-offs in localStorage until the connection is back)
  */
-const VERSION = "mise-v1";
+const VERSION = "aitta-v1";
 const STATIC = `${VERSION}-static`;
 const PAGES = `${VERSION}-pages`;
 

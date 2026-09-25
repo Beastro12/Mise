@@ -125,6 +125,7 @@ test("import → plan → list → split → check off → pantry", async ({ pag
   // 9. Checked items → pantry in one tap.
   await page.click('[data-testid="to-pantry"]');
   await expect(page.locator('[data-testid="list-message"]')).toContainText("Moved 4 item(s)");
+  if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/list.png`, fullPage: true });
   await page.goto("/pantry");
   for (const n of ["peruna", "lohi", "kerma", "sipuli"]) {
     await expect(page.locator(`[data-testid="pantry-item"][data-name="${n}"]`)).toBeVisible();

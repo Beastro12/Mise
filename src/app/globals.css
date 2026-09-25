@@ -1,42 +1,47 @@
 @import "tailwindcss";
 
+/* Aitta: "birch & frost". Birch-paper background, charcoal ink, one fjord-blue
+   accent, hairline borders. S-market = moss, Lidl = lake. */
 :root {
-  --bg: #f7f5f0;
+  --bg: #f4f2ee;
   --surface: #ffffff;
-  --surface-2: #efece4;
-  --ink: #1d231f;
-  --muted: #5f675f;
-  --line: #dcd8cd;
-  --accent: #2e6b4a;
+  --surface-2: #eceae4;
+  --ink: #22262a;
+  --muted: #676d73;
+  --line: #e1ddd5;
+  --accent: #3e6a86;
+  --accent-strong: #325871;
   --accent-ink: #ffffff;
-  --accent-soft: #e0eee5;
-  --warn: #9a5b00;
-  --warn-soft: #fff1d6;
-  --danger: #b3261e;
-  --smarket: #0a7a3d;
-  --smarket-soft: #def3e6;
-  --lidl: #0b4ea2;
-  --lidl-soft: #dfeafb;
+  --accent-soft: #e4edf3;
+  --warn: #85561a;
+  --warn-soft: #f6efe2;
+  --danger: #a23b3b;
+  --smarket: #46714f;
+  --smarket-soft: #e5eee6;
+  --lidl: #2f5d8a;
+  --lidl-soft: #e2eaf3;
 }
 
+/* Frost night */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121513;
-    --surface: #1b1f1c;
-    --surface-2: #232824;
-    --ink: #e9ece8;
-    --muted: #a3aba3;
-    --line: #333a35;
-    --accent: #7cc49b;
-    --accent-ink: #0d1a12;
-    --accent-soft: #1f3327;
-    --warn: #f0b660;
-    --warn-soft: #3a2c14;
-    --danger: #ff8a80;
-    --smarket: #6fd197;
-    --smarket-soft: #173323;
-    --lidl: #8fb8f5;
-    --lidl-soft: #182940;
+    --bg: #14181c;
+    --surface: #1b2026;
+    --surface-2: #232a31;
+    --ink: #e8ecef;
+    --muted: #9aa4ad;
+    --line: #2c343c;
+    --accent: #8db4ce;
+    --accent-strong: #a5c5da;
+    --accent-ink: #0f1a22;
+    --accent-soft: #1e2c37;
+    --warn: #e3b872;
+    --warn-soft: #33291a;
+    --danger: #e38b8b;
+    --smarket: #93be9d;
+    --smarket-soft: #1c2a21;
+    --lidl: #8fb3da;
+    --lidl-soft: #1b2635;
   }
 }
 
@@ -48,6 +53,7 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
   --color-warn: var(--warn);
@@ -57,7 +63,7 @@
   --color-smarket-soft: var(--smarket-soft);
   --color-lidl: var(--lidl);
   --color-lidl-soft: var(--lidl-soft);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 html {
@@ -68,6 +74,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
+  letter-spacing: -0.006em;
 }
 
 input,
@@ -78,4 +85,8 @@ textarea {
 
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--accent-soft);
 }

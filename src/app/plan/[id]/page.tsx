@@ -48,10 +48,10 @@ export default async function PlanPage(props: PageProps<"/plan/[id]">) {
       ) : (
         <ul className="space-y-2" data-testid="meals">
           {meals.map(({ meal, recipe }) => (
-            <li key={meal.id} className={cx("rounded-xl border border-line bg-surface p-3", meal.cookedAt && "opacity-70")} data-testid="meal">
+            <li key={meal.id} className={cx("rounded-lg border border-line bg-surface p-3", meal.cookedAt && "opacity-70")} data-testid="meal">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
                     {dayLabel(meal.day)} {meal.locked ? <Badge tone="accent">locked</Badge> : null} {meal.cookedAt ? <Badge tone="accent">cooked</Badge> : null}
                   </div>
                   <Link href={`/recipes/${recipe.id}?servings=${meal.servings}`} className="font-medium hover:underline">
@@ -154,7 +154,7 @@ export default async function PlanPage(props: PageProps<"/plan/[id]">) {
         <form className="mb-2">
           <input name="q" defaultValue={q} placeholder="Search recipes" className={inputCls} />
         </form>
-        <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
           {recipes.map((r) => (
             <li key={r.id} className="flex items-center justify-between gap-2 px-4 py-2">
               <div className="min-w-0">

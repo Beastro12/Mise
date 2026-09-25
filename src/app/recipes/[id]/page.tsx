@@ -53,7 +53,7 @@ export default async function RecipePage(props: PageProps<"/recipes/[id]">) {
         }
       >
         {target !== r.servings ? <p className="mb-2 text-xs text-muted">Scaled from {r.servings} servings.</p> : null}
-        <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
           {r.ingredients.map((i) => {
             const q = scaleQuantity(i.quantity, r.servings, target);
             return (

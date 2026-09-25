@@ -35,7 +35,7 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
       {recipes.length === 0 ? (
         <Empty>No recipes match. Import one from a link, photo or file.</Empty>
       ) : (
-        <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+        <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
           {recipes.map((r) => {
             const mins = (r.prepMinutes ?? 0) + (r.cookMinutes ?? 0);
             return (

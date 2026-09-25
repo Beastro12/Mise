@@ -34,7 +34,7 @@ export default async function PlansPage() {
         {plans.length === 0 ? (
           <Empty>No plans yet.</Empty>
         ) : (
-          <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
             {plans.map((p) => (
               <li key={p.id}>
                 <Link href={`/plan/${p.id}`} className="flex justify-between px-4 py-3 hover:bg-surface-2">

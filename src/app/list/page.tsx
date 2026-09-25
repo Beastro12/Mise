@@ -16,7 +16,7 @@ export default async function ListsPage() {
           No list yet. <Link className="underline" href="/plan">Plan some meals</Link> and generate one.
         </Empty>
       ) : (
-        <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
           {lists.map((l) => (
             <li key={l.id}>
               <Link href={`/list/${l.id}`} className="flex justify-between px-4 py-3 hover:bg-surface-2">
