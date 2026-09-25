@@ -34,7 +34,7 @@ To try it on your phone over wifi: `DEV_ORIGINS=192.168.x.y npm run dev -- -H 0.
 
 | Variable | Needed | Purpose |
 |---|---|---|
-| `APP_PASSCODE` | **yes in production** | Single passcode for the app. Unset = no login (a warning banner is shown). |
+| `APP_PASSCODE` | **yes in production** | Single passcode for the app. Unset = no login (a warning banner is shown). Use at least 12 characters: after 10 wrong tries in 15 minutes, login pauses for the rest of that window. |
 | `SESSION_SECRET` | recommended | Signs the login cookie. Defaults to a value derived from the passcode. |
 | `ANTHROPIC_API_KEY` | for photo import and smart extraction | Used server-side only. Without it, link import (JSON-LD), local file parsing, manual entry and pasted-text offers still work. |
 | `ANTHROPIC_MODEL` | no | Default `claude-sonnet-5`. |
@@ -43,6 +43,7 @@ To try it on your phone over wifi: `DEV_ORIGINS=192.168.x.y npm run dev -- -H 0.
 | `BLOB_STORE` | **`supabase` on Vercel** | `local` (`./.data/uploads`) or `supabase`. |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET` | with `BLOB_STORE=supabase` | Private bucket for recipe photos and files (default name `aitta-originals`). |
 | `S_MARKET_STORE`, `S_KAUPAT_STORE_ID` | no | Your S-market or Prisma. Seeded once; editable later under More → Stores. |
+| `PGLITE_DIR`, `UPLOADS_DIR` | no | Local only: where the embedded database and uploaded files are kept (default `./.data/pglite`, `./.data/uploads`). |
 | `S_KAUPAT_ADAPTER` | no | `mock` (invented demo catalogue) or `none`. Default: `mock` in dev, `none` in production. |
 
 ## Tests

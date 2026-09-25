@@ -5,21 +5,24 @@ import { config } from "../env";
 const MAX_BYTES = 3 * 1024 * 1024;
 const TIMEOUT_MS = 12_000;
 
-function isPrivateIp(ip: string): boolean {
-  if (net.isIPv4(ip)) {
-    const [a, b] = ip.split(".").map(Number);
-    return (
-      a === 10 ||
-      a === 127 ||
-      a === 0 ||
-      (a === 169 && b === 254) ||
-      (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) ||
-      (a === 100 && b >= 64 && b <= 127)
-    );
-  }
-  const v = ip.toLowerCase();
-  return v === "::1" || v === "::" || v.startsWith("fc") || v.startsWith("fd") || v.startsWith("fe80") || v.startsWith("::ffff:127.");
+/**
+ * Addresses a server-side fetch must never reach: loopback, private, link-local
+ * (cloud metadata), carrier-grade NAT, multicast, reserved and documentation
+ * ranges. BlockList also matches IPv4-mapped IPv6 forms such as ::ffff:a9fe:a9fe.
+ */
+const BLOCKED = new net.BlockList();
+for (const [net4, prefix] of [
+  ["0.0.0.0", 8], ["10.0.0.0", 8], ["100.64.0.0", 10], ["127.0.0.0", 8], ["169.254.0.0", 16], ["172.16.0.0", 12],
+  ["192.0.0.0", 24], ["192.0.2.0", 24], ["192.168.0.0", 16], ["198.18.0.0", 15], ["198.51.100.0", 24], ["203.0.113.0", 24],
+  ["224.0.0.0", 4], ["240.0.0.0", 4],
+] as const) BLOCKED.addSubnet(net4, prefix, "ipv4");
+for (const [net6, prefix] of [
+  ["::", 128], ["::1", 128], ["64:ff9b::", 96], ["100::", 64], ["2001:db8::", 32], ["fc00::", 7], ["fe80::", 10], ["ff00::", 8],
+] as const) BLOCKED.addSubnet(net6, prefix, "ipv6");
+
+export function isPrivateIp(ip: string): boolean {
+  const family = net.isIPv4(ip) ? "ipv4" : net.isIPv6(ip) ? "ipv6" : null;
+  return family === null || BLOCKED.check(ip, family);
 }
 
 async function assertPublicUrl(url: URL) {
@@ -89,15 +92,15 @@ const IMAGE_MAX = 6 * 1024 * 1024;
 
 /** Download a recipe photo (same safety rules as pages). Returns null on any problem. */
 export async function fetchImage(input: string): Promise<{ data: Buffer; mime: string; filename: string } | null> {
+  // One deadline for all hops and the body, so a slow server can't hold the request open.
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
     let url = new URL(input);
     let res: Response | null = null;
     for (let hop = 0; hop < 4; hop++) {
       await assertPublicUrl(url); // re-checked on every redirect hop
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
       res = await fetch(url, { signal: ctrl.signal, redirect: "manual", headers: { accept: "image/webp,image/jpeg,image/png,image/*" } });
-      clearTimeout(timer);
       const loc = res.headers.get("location");
       if (res.status >= 300 && res.status < 400 && loc) {
         url = new URL(loc, url);
@@ -109,11 +112,28 @@ export async function fetchImage(input: string): Promise<{ data: Buffer; mime: s
     if (!res) return null;
     const mime = (res.headers.get("content-type") ?? "").split(";")[0].trim();
     if (!res.ok || !/^image\/(jpeg|png|webp|gif)$/.test(mime)) return null;
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.byteLength > IMAGE_MAX || buf.byteLength < 200) return null;
+    if (Number(res.headers.get("content-length") ?? 0) > IMAGE_MAX) return null;
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    const reader = res.body?.getReader();
+    if (!reader) return null;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > IMAGE_MAX) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+    const buf = Buffer.concat(chunks);
+    if (buf.byteLength < 200) return null;
     const ext = mime.split("/")[1].replace("jpeg", "jpg");
     return { data: buf, mime, filename: `recipe-photo.${ext}` };
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
