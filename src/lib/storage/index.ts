@@ -31,7 +31,7 @@ class LocalBlobStore implements BlobStore {
 
 /** Supabase Storage (private bucket, accessed with the service role key server-side). */
 class SupabaseBlobStore implements BlobStore {
-  private bucket = process.env.SUPABASE_BUCKET || "mise-originals";
+  private bucket = process.env.SUPABASE_BUCKET || "aitta-originals";
   private async client() {
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;

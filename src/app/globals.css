@@ -1,42 +1,70 @@
 @import "tailwindcss";
 
+/* Aitta: the Finnish autumn kitchen.
+   spruce (structure) · birch bark (paper) · chanterelle (actions) ·
+   lingonberry (offers & prices) · blueberry (Lidl) · moss (S-market). */
 :root {
-  --bg: #f7f5f0;
-  --surface: #ffffff;
-  --surface-2: #efece4;
-  --ink: #1d231f;
-  --muted: #5f675f;
-  --line: #dcd8cd;
-  --accent: #2e6b4a;
-  --accent-ink: #ffffff;
-  --accent-soft: #e0eee5;
-  --warn: #9a5b00;
-  --warn-soft: #fff1d6;
-  --danger: #b3261e;
-  --smarket: #0a7a3d;
-  --smarket-soft: #def3e6;
-  --lidl: #0b4ea2;
-  --lidl-soft: #dfeafb;
+  --bg: #f3eee6;
+  --surface: #fffcf7;
+  --surface-2: #ebe4d8;
+  --ink: #1c2a22;
+  --muted: #6b6a5f;
+  --line: #e0d7c8;
+  --primary: #1f3b2e;
+  --primary-strong: #2a4d3c;
+  --primary-ink: #f7f1e6;
+  --accent: #1f3b2e;
+  --accent-strong: #2a4d3c;
+  --accent-ink: #f7f1e6;
+  --accent-soft: #dfe7dc;
+  --chanterelle: #e3a02f;
+  --chanterelle-strong: #cf8b1c;
+  --chanterelle-soft: #f8e7c4;
+  --chanterelle-ink: #2b1c05;
+  --chanterelle-deep: #7a4b06;
+  --lingon: #b3263e;
+  --lingon-soft: #f6dcdc;
+  --warn: #8a5410;
+  --warn-soft: #f8ecd6;
+  --danger: #a3242f;
+  --smarket: #2f5a3f;
+  --smarket-soft: #dde9dc;
+  --lidl: #3a3f78;
+  --lidl-soft: #e1e2f1;
+  --lidl-ink: #ffffff;
 }
 
+/* Forest night */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121513;
-    --surface: #1b1f1c;
-    --surface-2: #232824;
-    --ink: #e9ece8;
-    --muted: #a3aba3;
-    --line: #333a35;
-    --accent: #7cc49b;
-    --accent-ink: #0d1a12;
-    --accent-soft: #1f3327;
-    --warn: #f0b660;
-    --warn-soft: #3a2c14;
-    --danger: #ff8a80;
-    --smarket: #6fd197;
-    --smarket-soft: #173323;
-    --lidl: #8fb8f5;
-    --lidl-soft: #182940;
+    --bg: #101913;
+    --surface: #17231b;
+    --surface-2: #1f2d23;
+    --ink: #f1ebdf;
+    --muted: #a8ab9c;
+    --line: #2a3a2f;
+    --primary: #e3a02f;
+    --primary-strong: #efb450;
+    --primary-ink: #1b1204;
+    --accent: #9cc3a3;
+    --accent-strong: #b4d4ba;
+    --accent-ink: #0f1a12;
+    --accent-soft: #203328;
+    --chanterelle: #e8ab43;
+    --chanterelle-strong: #f1bd61;
+    --chanterelle-soft: #3a2c12;
+    --chanterelle-ink: #1b1204;
+    --chanterelle-deep: #f1bd61;
+    --lingon: #ef7a8b;
+    --lingon-soft: #3a1c22;
+    --warn: #e7b86c;
+    --warn-soft: #33281a;
+    --danger: #f09096;
+    --smarket: #9cc3a3;
+    --smarket-soft: #1e3025;
+    --lidl: #a9adea;
+    --lidl-soft: #23254a;
+    --lidl-ink: #15173a;
   }
 }
 
@@ -48,8 +76,19 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-ink: var(--primary-ink);
+  --color-chanterelle: var(--chanterelle);
+  --color-chanterelle-strong: var(--chanterelle-strong);
+  --color-chanterelle-soft: var(--chanterelle-soft);
+  --color-chanterelle-ink: var(--chanterelle-ink);
+  --color-chanterelle-deep: var(--chanterelle-deep);
+  --color-lingon: var(--lingon);
+  --color-lingon-soft: var(--lingon-soft);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
   --color-danger: var(--danger);
@@ -57,7 +96,9 @@
   --color-smarket-soft: var(--smarket-soft);
   --color-lidl: var(--lidl);
   --color-lidl-soft: var(--lidl-soft);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --color-lidl-ink: var(--lidl-ink);
+  --font-display: "Bricolage Grotesque Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 html {
@@ -68,6 +109,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
+  letter-spacing: -0.006em;
 }
 
 input,
@@ -78,4 +120,8 @@ textarea {
 
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--accent-soft);
 }

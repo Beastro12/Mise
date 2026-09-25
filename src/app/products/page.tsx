@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getMapping, listMappings, searchSMarketProducts, type ProductRow } from "@/lib/services/products";
-import { clearMappingAction, manualProductAction, mapProductAction } from "@/app/actions/stores";
+import { getMapping, getProductById, listMappings, searchSMarketProducts, type ProductRow } from "@/lib/services/products";
+import { clearMappingAction, manualProductAction, mapProductAction, setAlternateAction } from "@/app/actions/stores";
 import { formatPrice } from "@/lib/domain/offers";
 import { CANONICAL_UNITS } from "@/lib/domain/units";
 import { Badge, Button, Card, Empty, Field, LinkButton, PageTitle, Section, btn, cx, inputCls } from "@/components/ui";
@@ -41,9 +41,9 @@ export default async function ProductsPage(props: PageProps<"/products">) {
         {maps.length === 0 ? (
           <Empty>No matches yet. Open a shopping list item and tap “Match product”.</Empty>
         ) : (
-          <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]">
             {maps.map(({ map, product }) => (
-              <li key={map.id} className="flex items-center justify-between gap-2 px-3 py-2">
+              <li key={map.id} className="flex items-center justify-between gap-2 px-1 py-2.5">
                 <div className="min-w-0">
                   <Link href={`/products?name=${encodeURIComponent(map.nameFi)}`} className="text-sm font-semibold hover:underline">
                     {map.nameFi}
@@ -64,7 +64,9 @@ export default async function ProductsPage(props: PageProps<"/products">) {
   }
 
   const [current, result] = await Promise.all([getMapping(name, "smarket"), searchSMarketProducts(q)]);
-  const candidates = result.products.filter((p) => p.id !== current?.product.id);
+  const alternateId = current?.map.alternateProductId ?? null;
+  const alternate = alternateId ? (result.products.find((p) => p.id === alternateId) ?? (await getProductById(alternateId))) : null;
+  const candidates = result.products.filter((p) => p.id !== current?.product.id && p.id !== alternateId);
   const shown = all ? candidates : candidates.slice(0, 3);
 
   return (
@@ -75,8 +77,16 @@ export default async function ProductsPage(props: PageProps<"/products">) {
 
       {current ? (
         <Card className="mb-4">
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">Current match</div>
+          <div className="mb-1 text-xs font-bold text-primary">1st choice</div>
           <ProductLine p={current.product} />
+          {alternate ? (
+            <div className="mt-3 border-t border-line pt-3">
+              <div className="mb-1 text-xs font-bold text-primary">2nd choice (if sold out)</div>
+              <ProductLine p={alternate} />
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-muted">Pick a 2nd choice below: the S-kaupat helper uses it when the first is sold out.</p>
+          )}
         </Card>
       ) : null}
 
@@ -96,10 +106,20 @@ export default async function ProductsPage(props: PageProps<"/products">) {
       {shown.length === 0 ? (
         <Empty>No candidates. Add the product by hand below (copy the details from the S-kaupat app).</Empty>
       ) : (
-        <ul className="divide-y divide-line rounded-xl border border-line bg-surface" data-testid="candidates">
+        <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]" data-testid="candidates">
           {shown.map((p) => (
-            <li key={p.id} className="flex items-center justify-between gap-2 px-3 py-2">
+            <li key={p.id} className="flex items-center justify-between gap-2 px-1 py-2.5">
               <ProductLine p={p} />
+              <span className="flex shrink-0 gap-1">
+              {current ? (
+                <form action={setAlternateAction}>
+                  <input type="hidden" name="nameFi" value={name} />
+                  <input type="hidden" name="productId" value={p.id} />
+                  <button className={btn.small} data-testid="pick-alternate">
+                    2nd
+                  </button>
+                </form>
+              ) : null}
               <form action={mapProductAction}>
                 <input type="hidden" name="nameFi" value={name} />
                 <input type="hidden" name="storeId" value="smarket" />
@@ -109,6 +129,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
                   Use
                 </button>
               </form>
+              </span>
             </li>
           ))}
         </ul>

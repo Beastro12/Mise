@@ -16,7 +16,8 @@ export type ClientItem = {
   product: { id: string; name: string; source: string; packSize: number | null; packUnit: string | null } | null;
   offer: { productName: string; price: number; validTo: string } | null;
   sources: string[];
-  state: "none" | "ask" | "covered" | "have";
+  state: "none" | "ask" | "covered" | "have" | "refill" | "skipped";
+  household: boolean;
   note: string | null;
   manual: boolean;
   checked: boolean;

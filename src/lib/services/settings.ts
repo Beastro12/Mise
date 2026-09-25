@@ -79,3 +79,32 @@ export async function removeRule(nameFi: string) {
   const db = await getDb();
   await db.delete(schema.storeRules).where(and(eq(schema.storeRules.nameFi, nameFi)));
 }
+
+// ---------------------------------------------------------------------------
+// Delivery preferences for the S-kaupat helper
+// ---------------------------------------------------------------------------
+
+export type DeliveryPrefs = {
+  mode: "home" | "pickup";
+  /** ISO weekday 1 = Monday … 7 = Sunday */
+  weekday: number;
+  windowStart: string; // "10:00"
+  windowEnd: string; // "14:00"
+  substitutions: "alternate" | "none" | "store";
+};
+
+export const DEFAULT_DELIVERY: DeliveryPrefs = { mode: "home", weekday: 6, windowStart: "10:00", windowEnd: "14:00", substitutions: "alternate" };
+
+export async function getDeliveryPrefs(): Promise<DeliveryPrefs> {
+  const db = await getDb();
+  const [row] = await db.select().from(schema.settings).where(eq(schema.settings.key, "delivery"));
+  return { ...DEFAULT_DELIVERY, ...((row?.value as Partial<DeliveryPrefs>) ?? {}) };
+}
+
+export async function setDeliveryPrefs(p: DeliveryPrefs) {
+  const db = await getDb();
+  await db
+    .insert(schema.settings)
+    .values({ key: "delivery", value: p })
+    .onConflictDoUpdate({ target: schema.settings.key, set: { value: p } });
+}

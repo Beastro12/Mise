@@ -2,14 +2,14 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Mise FI: meal planner",
-    short_name: "Mise FI",
+    name: "Aitta: meal planner",
+    short_name: "Aitta",
     description: "Meal planner and shopping list for S-market and Lidl in Turku",
     start_url: "/",
     scope: "/",
     display: "standalone",
-    background_color: "#f7f5f0",
-    theme_color: "#2e6b4a",
+    background_color: "#f3eee6",
+    theme_color: "#1f3b2e",
     lang: "en",
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png" },

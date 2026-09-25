@@ -200,6 +200,8 @@ export const ingredientProductMap = pgTable(
     productId: uuid("product_id")
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
+    /** Second choice, used by the cart helper when the first is sold out. */
+    alternateProductId: uuid("alternate_product_id").references(() => products.id, { onDelete: "set null" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -251,6 +253,23 @@ export const pantryItems = pgTable(
   },
   (t) => [uniqueIndex("pantry_name_idx").on(t.nameFi)],
 );
+
+// ---------------------------------------------------------------------------
+// Household refills (toilet paper, coffee, dish soap…)
+// ---------------------------------------------------------------------------
+
+export const householdItems = pgTable("household_items", {
+  id: id(),
+  name: text("name").notNull(),
+  nameFi: text("name_fi").notNull(),
+  quantity: doublePrecision("quantity"),
+  unit: text("unit"),
+  intervalDays: integer("interval_days").notNull().default(14),
+  lastBoughtOn: date("last_bought_on"),
+  section: text("section").notNull().default("muut"),
+  active: boolean("active").notNull().default(true),
+  createdAt: createdAt(),
+});
 
 // ---------------------------------------------------------------------------
 // Planning
@@ -331,8 +350,10 @@ export const shoppingItems = pgTable(
     price: money("price"),
     offerId: uuid("offer_id").references(() => offers.id, { onDelete: "set null" }),
     sources: jsonb("sources").$type<ItemSource[]>().notNull().default([]),
-    /** none = normal item; ask = staple awaiting "have it?"; covered = pantry covers it */
-    state: text("state").$type<"none" | "ask" | "covered" | "have">().notNull().default("none"),
+    /** none = to buy; ask = staple awaiting "have it?"; covered = pantry covers it;
+     *  refill = household refill suggested; skipped = refill declined this time */
+    state: text("state").$type<"none" | "ask" | "covered" | "have" | "refill" | "skipped">().notNull().default("none"),
+    householdItemId: uuid("household_item_id").references(() => householdItems.id, { onDelete: "set null" }),
     note: text("note"),
     manual: boolean("manual").notNull().default(false),
     checked: boolean("checked").notNull().default(false),

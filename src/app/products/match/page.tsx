@@ -33,9 +33,9 @@ export default async function MatchQueuePage(props: PageProps<"/products/match">
         </p>
       ) : null}
       {rows.length === 0 ? <Empty>Every S-market item already has a product.</Empty> : null}
-      <ul className="space-y-3">
+      <ul className="border-t border-line">
         {rows.map(({ item, res }) => (
-          <li key={item.id} className="rounded-xl border border-line bg-surface p-3">
+          <li key={item.id} className="border-b border-line py-4">
             <div className="mb-2 flex items-baseline justify-between">
               <span className="font-semibold">{item.nameFi}</span>
               <Link className="text-xs underline" href={`/products?name=${encodeURIComponent(item.nameFi)}&return=${encodeURIComponent(here)}`}>

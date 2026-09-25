@@ -109,13 +109,15 @@ export async function createManualProduct(input: {
   price?: number | null;
   unitPrice?: number | null;
   unitPriceUnit?: string | null;
+  /** "s-kaupat" when captured from the real site by the Mac helper. */
+  source?: "manual" | "s-kaupat";
 }): Promise<ProductRow> {
   const db = await getDb();
   const [store] = await db.select().from(schema.stores).where(eq(schema.stores.id, "smarket"));
   const [row] = await upsertProducts([
     {
       storeId: "smarket",
-      source: "manual",
+      source: input.source ?? "manual",
       externalId: input.externalId?.trim() || `manual-${randomUUID()}`,
       ean: input.ean?.trim() || null,
       name: input.name.trim(),
@@ -192,4 +194,19 @@ export async function refreshMappedProducts(productIds: string[]) {
       return;
     }
   }
+}
+
+/** Second choice for an ingredient (used by the cart helper when the first is sold out). */
+export async function setAlternate(nameFi: string, storeId: StoreId, productId: string | null) {
+  const db = await getDb();
+  await db
+    .update(schema.ingredientProductMap)
+    .set({ alternateProductId: productId, updatedAt: new Date() })
+    .where(and(eq(schema.ingredientProductMap.nameFi, nameFi), eq(schema.ingredientProductMap.storeId, storeId)));
+}
+
+export async function getProductById(id: string): Promise<ProductRow | null> {
+  const db = await getDb();
+  const [row] = await db.select().from(schema.products).where(eq(schema.products.id, id));
+  return row ?? null;
 }

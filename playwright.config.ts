@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 const PORT = 3200;
-const dataDir = path.join(os.tmpdir(), `mise-e2e-${Date.now()}`);
+const dataDir = path.join(os.tmpdir(), `aitta-e2e-${Date.now()}`);
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -16,6 +16,8 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     ...devices["Pixel 7"],
+    // COLOR_SCHEME=dark with SHOTS=<dir> to screenshot the dark theme.
+    colorScheme: process.env.COLOR_SCHEME === "dark" ? "dark" : "light",
     // Use the preinstalled Chromium when PLAYWRIGHT_CHROMIUM is set (CI/sandbox).
     launchOptions: process.env.PLAYWRIGHT_CHROMIUM ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM } : {},
     trace: "retain-on-failure",

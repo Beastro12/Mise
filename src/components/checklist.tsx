@@ -8,6 +8,8 @@ import { SECTIONS } from "@/lib/domain/sections";
 import { formatQty } from "@/lib/domain/units";
 import { formatPrice } from "@/lib/domain/offers";
 import { Badge, btn, cx, inputCls } from "./ui";
+import { SectionIcon } from "./icons";
+import { foodColor } from "@/lib/domain/food-colors";
 
 type Mode = "owner" | "share";
 type QueueEntry = { itemId: string; checked: boolean };
@@ -40,8 +42,8 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export function Checklist({ initial, mode, token }: { initial: ClientList; mode: Mode; token?: string }) {
   const base = mode === "owner" ? `/api/lists/${initial.id}` : `/api/share/${token}`;
-  const snapKey = `mise:list:${initial.id}`;
-  const queueKey = `mise:queue:${initial.id}`;
+  const snapKey = `aitta:list:${initial.id}`;
+  const queueKey = `aitta:queue:${initial.id}`;
 
   const [list, setList] = useState<ClientList>(initial);
   const [online, setOnline] = useState(true);
@@ -184,12 +186,18 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
 
   const buy = list.items.filter((i) => i.state === "none" || (mode === "share" && i.state === "ask"));
   const ask = mode === "owner" ? list.items.filter((i) => i.state === "ask") : [];
+  const refills = mode === "owner" ? list.items.filter((i) => i.state === "refill") : [];
   const covered = list.items.filter((i) => i.state === "covered" || i.state === "have");
   const groups = useMemo(() => groupForDisplay(buy, list.sectionOrder), [buy, list.sectionOrder]);
   const checkedToPantry = list.items.filter((i) => i.checked && !i.movedToPantry).length;
   const unmatched = list.items.filter((i) => i.storeId === "smarket" && i.state === "none" && !i.product).length;
   const storeName = (id: string) => list.stores.find((s) => s.id === id)?.name ?? (id === "lidl" ? "Lidl" : "S-market");
   const done = buy.filter((i) => i.checked).length;
+  const toBuy = list.items.filter((i) => i.state === "none");
+  const cost = (store: string) => toBuy.filter((i) => i.storeId === store && i.price != null).reduce((sum, i) => sum + i.price! * (i.packs ?? 1), 0);
+  const unpriced = toBuy.filter((i) => i.price == null).length;
+  const costS = cost("smarket");
+  const costL = cost("lidl");
   const shareUrl = typeof window !== "undefined" && list.shareToken ? `${window.location.origin}/share/${list.shareToken}` : null;
 
   async function share() {
@@ -215,8 +223,18 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
         {pendingCount ? <Badge tone="warn">{pendingCount} to sync</Badge> : null}
       </div>
 
+      {costS || costL ? (
+        <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-2xl bg-surface px-4 py-3 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]" data-testid="cost">
+          <span className="font-display text-lg font-[680] tabular text-primary">≈ {formatPrice(costS + costL)}</span>
+          <span className="text-xs text-muted tabular">
+            S-market {formatPrice(costS)} · Lidl {formatPrice(costL)}
+            {unpriced ? ` · ${unpriced} item${unpriced === 1 ? "" : "s"} without a price` : ""}
+          </span>
+        </div>
+      ) : null}
+
       {mode === "owner" ? (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-6 flex items-center gap-2">
           <button
             className={btn.primary}
             disabled={busy || !checkedToPantry}
@@ -225,37 +243,44 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
           >
             Checked → pantry{checkedToPantry ? ` (${checkedToPantry})` : ""}
           </button>
-          <button className={btn.secondary} onClick={share} disabled={!shareUrl}>
-            Share
-          </button>
-          <button
-            className={btn.ghost}
-            disabled={busy}
-            onClick={() => ownerCall(base, { action: "renewToken" }, "New share link created; the old link no longer works.")}
-          >
-            New link
-          </button>
-          <a className={btn.secondary} href={`${base}/export`} data-testid="export">
-            Export S-market JSON
-          </a>
           {unmatched ? (
-            <Link className={btn.secondary} href={`/products/match?list=${list.id}`} data-testid="match-queue">
+            <Link className="px-2 text-sm text-muted underline decoration-line underline-offset-4" href={`/products/match?list=${list.id}`} data-testid="match-queue">
               Match {unmatched} product{unmatched === 1 ? "" : "s"}
             </Link>
           ) : null}
-          {list.planId ? (
-            <Link className={btn.ghost} href={`/plan/${list.planId}`}>
-              Plan
-            </Link>
-          ) : null}
+          <details className="relative ml-auto">
+            <summary className={cx(btn.ghost, "list-none cursor-pointer")} aria-label="More list actions">
+              ···
+            </summary>
+            <div className="absolute right-0 z-20 mt-1 flex w-52 flex-col rounded-md border border-line bg-surface py-1 text-sm shadow-[0_8px_24px_-12px_rgba(0,0,0,.18)]">
+              <button className="px-4 py-2 text-left hover:bg-surface-2" onClick={share} disabled={!shareUrl}>
+                Share with household
+              </button>
+              <button
+                className="px-4 py-2 text-left hover:bg-surface-2"
+                disabled={busy}
+                onClick={() => ownerCall(base, { action: "renewToken" }, "New share link created; the old link no longer works.")}
+              >
+                New share link
+              </button>
+              <a className="px-4 py-2 hover:bg-surface-2" href={`${base}/export`} data-testid="export">
+                Export S-market JSON
+              </a>
+              {list.planId ? (
+                <Link className="px-4 py-2 hover:bg-surface-2" href={`/plan/${list.planId}`}>
+                  Open plan
+                </Link>
+              ) : null}
+            </div>
+          </details>
         </div>
       ) : null}
-      {message ? <p className="mb-3 rounded-lg bg-accent-soft px-3 py-2 text-sm text-accent" data-testid="list-message">{message}</p> : null}
+      {message ? <p className="mb-5 rounded-2xl bg-accent-soft px-4 py-2.5 text-sm font-medium text-primary" data-testid="list-message">{message}</p> : null}
 
       {ask.length ? (
-        <div className="mb-4 rounded-xl border border-line bg-warn-soft/50 p-3" data-testid="have-it">
-          <div className="mb-2 text-sm font-semibold">Have it?</div>
-          <ul className="space-y-1.5">
+        <div className="mb-8 rounded-3xl bg-chanterelle-soft p-4" data-testid="have-it">
+          <div className="mb-3 font-display text-lg font-[680] text-chanterelle-deep">Have it at home?</div>
+          <ul className="space-y-2">
             {ask.map((i) => (
               <li key={i.id} className="flex items-center justify-between gap-2">
                 <span className="text-sm">
@@ -275,18 +300,48 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
         </div>
       ) : null}
 
-      {groups.length === 0 ? <p className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-muted">Nothing to buy.</p> : null}
+      {refills.length ? (
+        <div className="mb-8 rounded-3xl bg-lidl-soft p-4" data-testid="refills">
+          <div className="mb-1 font-display text-lg font-[680] text-lidl">Running low?</div>
+          <p className="mb-3 text-xs text-muted">Household refills due before your next shop.</p>
+          <ul className="space-y-2">
+            {refills.map((i) => (
+              <li key={i.id} className="flex items-center justify-between gap-2" data-testid="refill" data-name={i.nameFi}>
+                <span className="text-sm font-semibold">
+                  {i.displayName} <span className="font-normal text-muted">{formatQty(i)}</span>
+                </span>
+                <span className="flex gap-1">
+                  <button className={btn.small} disabled={busy} onClick={() => ownerCall(`${base}/items/${i.id}`, { action: "refill", add: true })}>
+                    Add
+                  </button>
+                  <button className={btn.small} disabled={busy} onClick={() => ownerCall(`${base}/items/${i.id}`, { action: "refill", add: false })}>
+                    Skip
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {groups.length === 0 ? <p className="border-y border-line py-10 text-center text-sm text-muted">Nothing to buy.</p> : null}
 
       {groups.map((g) => (
-        <section key={g.storeId} className="mb-6" data-testid={`store-${g.storeId}`}>
-          <h2 className={cx("mb-2 flex items-center justify-between rounded-lg px-3 py-2 font-semibold", g.storeId === "lidl" ? "bg-lidl-soft text-lidl" : "bg-smarket-soft text-smarket")}>
-            <span>{storeName(g.storeId)}</span>
-            <span className="text-xs font-medium tabular">{g.sections.reduce((n, s) => n + s.items.length, 0)} items</span>
+        <section key={g.storeId} className="mb-10" data-testid={`store-${g.storeId}`}>
+          <h2 className={cx("mb-3 flex items-center justify-between rounded-2xl px-4 py-3 font-display text-[19px] font-[680] tracking-[-0.01em]", g.storeId === "lidl" ? "bg-lidl text-lidl-ink" : "bg-primary text-primary-ink")}>
+            <span className="flex items-center gap-2">
+              <span className={cx("h-2.5 w-2.5 rounded-full", g.storeId === "lidl" ? "bg-[#f2c94c]" : "bg-chanterelle")} aria-hidden />
+              {storeName(g.storeId)}
+            </span>
+            <span className="font-sans text-xs font-semibold opacity-80 tabular">{g.sections.reduce((n, s) => n + s.items.length, 0)} items</span>
           </h2>
           {g.sections.map((s) => (
-            <div key={s.key} className="mb-3" data-testid={`section-${g.storeId}-${s.key}`}>
-              <div className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-muted">{SECTIONS.find((x) => x.key === s.key)?.fi}</div>
-              <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+            <div key={s.key} className="mb-5" data-testid={`section-${g.storeId}-${s.key}`}>
+              <div className="flex items-center gap-1.5 px-1 pb-1.5 text-xs font-bold text-primary">
+                <SectionIcon section={s.key} className="h-4 w-4 text-chanterelle-strong" />
+                {SECTIONS.find((x) => x.key === s.key)?.fi}
+              </div>
+              <ul className="divide-y divide-line rounded-3xl bg-surface px-3 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]">
                 {s.items.map((i) => (
                   <Row
                     key={i.id}
@@ -370,11 +425,11 @@ function Row({
   return (
     <li data-testid="list-item" data-name={i.nameFi} data-checked={i.checked ? "1" : "0"}>
       <div className="flex items-stretch">
-        <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-start gap-3 px-3 py-2.5 text-left" aria-pressed={i.checked}>
+        <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-start gap-3.5 py-3 pl-0.5 text-left" aria-pressed={i.checked}>
           <span
             className={cx(
-              "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
-              i.checked ? "border-accent bg-accent text-accent-ink" : "border-line",
+              "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] text-[11px] transition-colors",
+              i.checked ? "border-primary bg-primary text-primary-ink" : "border-muted/50",
             )}
             aria-hidden
           >
@@ -382,7 +437,10 @@ function Row({
           </span>
           <span className="min-w-0 flex-1">
             <span className="flex items-baseline justify-between gap-2">
-              <span className={cx("font-medium", i.checked && "text-muted line-through")}>{cap(i.displayName)}</span>
+              <span className={cx("flex items-center gap-2 font-semibold", i.checked && "text-muted line-through")}>
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-black/10" style={{ background: foodColor(i.nameFi, i.section) }} aria-hidden />
+                {cap(i.displayName)}
+              </span>
               <span className={cx("shrink-0 tabular text-sm", i.checked && "text-muted")}>{formatQty(i) || "as needed"}</span>
             </span>
             {i.product || i.packs ? (
@@ -394,7 +452,13 @@ function Row({
               </span>
             ) : null}
             {i.storeReason ? (
-              <span className={cx("block text-xs", i.storeId === "lidl" ? "text-lidl" : "text-smarket")} data-testid="store-reason">
+              <span
+                className={cx(
+                  "mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                  i.offer ? "bg-lingon-soft text-lingon" : "bg-surface-2 text-muted",
+                )}
+                data-testid="store-reason"
+              >
                 {i.storeReason}
               </span>
             ) : null}
@@ -402,13 +466,13 @@ function Row({
           </span>
         </button>
         {mode === "owner" ? (
-          <button type="button" onClick={onOpen} className="px-3 text-muted" aria-label="Item options" data-testid="item-options">
+          <button type="button" onClick={onOpen} className="pl-3 pr-1 text-muted" aria-label="Item options" data-testid="item-options">
             ⋯
           </button>
         ) : null}
       </div>
       {open && mode === "owner" ? (
-        <div className="space-y-2 border-t border-line bg-bg px-3 py-2 text-sm">
+        <div className="space-y-2 border-t border-dashed border-line py-3 pl-9 text-sm">
           {i.sources.length ? <div className="text-xs text-muted">For: {i.sources.join(", ")}</div> : null}
           <div className="flex flex-wrap gap-1.5">
             <button className={btn.small} disabled={busy} onClick={() => onStore(other, false)} data-testid="move-store">

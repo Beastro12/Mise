@@ -2,6 +2,8 @@ import { listPantry } from "@/lib/services/pantry";
 import { addPantryAction, updatePantryAction, usedUpAction } from "@/app/actions/pantry";
 import { SECTIONS } from "@/lib/domain/sections";
 import { formatQty } from "@/lib/domain/units";
+import { SectionIcon } from "@/components/icons";
+import { foodColor } from "@/lib/domain/food-colors";
 import { Button, Card, Empty, PageTitle, btn, cx, inputCls } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -17,20 +19,26 @@ export default async function PantryPage() {
           <Button type="submit">Add</Button>
         </form>
       </Card>
-      <div className="mt-4 space-y-4">
+      <div className="mt-8 space-y-7">
         {items.length === 0 ? <Empty>The pantry is empty.</Empty> : null}
         {SECTIONS.map((s) => {
           const inSection = items.filter((i) => i.category === s.key);
           if (!inSection.length) return null;
           return (
             <div key={s.key}>
-              <div className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-muted">{s.fi}</div>
-              <ul className="divide-y divide-line rounded-xl border border-line bg-surface" data-testid="pantry-list">
+              <div className="flex items-center gap-1.5 px-1 pb-1.5 text-xs font-bold text-primary">
+                <SectionIcon section={s.key} className="h-4 w-4 text-chanterelle-strong" />
+                {s.fi}
+              </div>
+              <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]" data-testid="pantry-list">
                 {inSection.map((i) => (
-                  <li key={i.id} className="px-3 py-2" data-testid="pantry-item" data-name={i.nameFi}>
+                  <li key={i.id} className="px-1 py-2.5" data-testid="pantry-item" data-name={i.nameFi}>
                     <details>
                       <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
-                        <span className="font-medium">{i.nameFi.charAt(0).toUpperCase() + i.nameFi.slice(1)}</span>
+                        <span className="flex items-center gap-2 font-semibold">
+                          <span className="h-2.5 w-2.5 rounded-full ring-1 ring-black/10" style={{ background: foodColor(i.nameFi, i.category) }} aria-hidden />
+                          {i.nameFi.charAt(0).toUpperCase() + i.nameFi.slice(1)}
+                        </span>
                         <span className="text-sm text-muted tabular">{formatQty(i) || i.note || "some"}</span>
                       </summary>
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">

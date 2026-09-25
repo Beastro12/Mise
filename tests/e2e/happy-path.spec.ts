@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { execFileSync } from "node:child_process";
 
 /**
  * Happy path from the brief:
@@ -44,6 +45,20 @@ test("import → plan → list → split → check off → pantry", async ({ pag
   await expect(page.getByText("Added 2 offers")).toBeVisible();
   await expect(page.locator('[data-testid="offers"] li')).toHaveCount(2);
 
+  // 2b. Recipe cards: the imported page's photo is used; protein icons are derived.
+  await page.goto("/recipes");
+  const card = (title: string) => page.locator("li", { hasText: title });
+  await expect(card("Kermaperunat ja uunimakkara").locator('[data-testid="recipe-photo"]')).toBeVisible();
+  await expect(card("Lohikeitto").locator('[data-testid="traits"]')).toHaveAttribute("data-protein", "fish");
+  await expect(card("Kasviscurry").locator('[data-testid="traits"]')).toHaveAttribute("data-protein", "vegan");
+  await expect(card("Broilerikastike").locator('[data-testid="traits"]')).toHaveAttribute("data-protein", "chicken");
+  if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/recipes.png`, fullPage: true });
+
+  // 2c. A household refill (never bought → due now).
+  await page.goto("/household");
+  await page.locator('[data-testid="household-suggestion"]', { hasText: "WC-paperi" }).click();
+  await expect(page.locator('[data-testid="household-item"][data-name="wc-paperi"]')).toBeVisible();
+
   // 3. Plan 3 meals (pick mode).
   await page.goto("/plan");
   await page.click('[data-testid="new-plan"]');
@@ -53,6 +68,9 @@ test("import → plan → list → split → check off → pantry", async ({ pag
     await expect(page.locator('[data-testid="meal"]').filter({ hasText: title })).toBeVisible();
   }
   await expect(page.locator('[data-testid="meal"]')).toHaveCount(3);
+  await expect(page.locator('[data-testid="week-strip"]')).toBeVisible();
+  await expect(page.locator('[data-testid="season"]')).toBeVisible();
+  if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/plan.png`, fullPage: true });
 
   // 4. Generate the list and check the store split.
   await page.click('[data-testid="generate-list"]');
@@ -70,6 +88,9 @@ test("import → plan → list → split → check off → pantry", async ({ pag
   }
   // Merged across recipes: peruna 800 g (kermaperunat 4→2 serv = 400 g) + lohikeitto 300 g → 700 g
   await expect(item(page, "smarket", "peruna")).toContainText("700 g");
+  // Household refills are suggested, and added on request.
+  await page.locator('[data-testid="refill"][data-name="wc-paperi"]').getByRole("button", { name: "Add" }).click();
+  await expect(item(page, "smarket", "wc-paperi")).toBeVisible();
   // Staples ask instead of being added
   await expect(page.locator('[data-testid="have-it"]')).toContainText("Suola");
 
@@ -94,6 +115,7 @@ test("import → plan → list → split → check off → pantry", async ({ pag
   await page.locator('[data-testid="pick-product"]').first().click();
   await expect(page).toHaveURL(listUrl);
   await expect(item(page, "smarket", "kerma")).toContainText("×");
+  await expect(page.locator('[data-testid="cost"]')).toContainText("S-market");
 
   // 6. Check off items.
   for (const [store, n] of [["smarket", "peruna"], ["lidl", "lohi"], ["smarket", "kerma"]] as const) {
@@ -122,13 +144,56 @@ test("import → plan → list → split → check off → pantry", async ({ pag
   const exported = await page.evaluate(async (url) => (await fetch(`/api/lists/${url.split("/").pop()}/export`)).json(), listUrl);
   expect(exported.items.some((i: { ingredient: string; quantity: number }) => i.ingredient === "kerma" && i.quantity >= 1)).toBe(true);
 
+  // 8b. Order feed for the S-kaupat helper (public via the share token) + helper dry run.
+  const order = await page.evaluate(async (t) => (await fetch(`/api/share/${t}/order`)).json(), token);
+  const kerma = order.items.find((i: { ingredient: string }) => i.ingredient === "kerma");
+  expect(kerma).toMatchObject({ quantity: 1, primary: { source: "mock" } });
+  expect(order.delivery).toMatchObject({ mode: "home", weekday: 6 });
+  const origin = new URL(page.url()).origin;
+  const dry = execFileSync("node", ["helper/skaupat-cart.mjs", `${origin}/share/${token}`, "--dry-run"], { encoding: "utf8" });
+  expect(dry).toContain("kerma: only MOCK products matched");
+  expect(dry).toContain("Home delivery, preferred Sat 10:00–14:00");
+
+  // 8c. Product matching from the Mac: create a helper key in the app, list what needs a product, save a real one.
+  await page.goto("/delivery");
+  await page.click('[data-testid="create-helper-key"]');
+  const helperKey = (await page.locator('[data-testid="helper-key-value"]').innerText()).trim();
+  expect(helperKey).toMatch(/^aitta_/);
+  const matchDry = execFileSync("node", ["helper/skaupat-match.mjs", "--dry-run", "--list", listUrl.split("/").pop()!], {
+    encoding: "utf8",
+    env: { ...process.env, AITTA_URL: origin, AITTA_HELPER_KEY: helperKey, AITTA_HOME: "test-results/aitta-home" },
+  });
+  expect(matchDry).toMatch(/• kerma\n/); // only a MOCK product so far
+  expect(matchDry).toMatch(/• peruna\n/);
+  const post = (key: string) =>
+    fetch(`${origin}/api/helper/products`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        nameFi: "kerma",
+        rank: 1,
+        product: { externalId: "6400000000009", ean: "6400000000009", name: "Testikerma 2 dl", packSize: 2, packUnit: "dl", price: 1.19 },
+      }),
+    });
+  expect((await post("aitta_wrong")).status).toBe(401);
+  expect((await post(helperKey)).status).toBe(200);
+  const exported2 = await page.evaluate(async (url) => (await fetch(`/api/lists/${url.split("/").pop()}/export`)).json(), listUrl);
+  expect(exported2.items.find((i: { ingredient: string }) => i.ingredient === "kerma")).toMatchObject({
+    s_kaupat_product_id: "6400000000009",
+    ean: "6400000000009",
+    product_source: "s-kaupat",
+  });
+  await page.goto(listUrl);
+
   // 9. Checked items → pantry in one tap.
   await page.click('[data-testid="to-pantry"]');
   await expect(page.locator('[data-testid="list-message"]')).toContainText("Moved 4 item(s)");
+  if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/list.png`, fullPage: true });
   await page.goto("/pantry");
   for (const n of ["peruna", "lohi", "kerma", "sipuli"]) {
     await expect(page.locator(`[data-testid="pantry-item"][data-name="${n}"]`)).toBeVisible();
   }
+  if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/pantry.png`, fullPage: true });
 });
 
 test("offline check-off is kept and synced", async ({ page, context }) => {

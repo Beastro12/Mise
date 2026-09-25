@@ -1,11 +1,18 @@
-# Mise FI
+# Aitta
+
+*Aitta* is the old Finnish storehouse on stilts where a household kept its food.
 
 A personal meal planner and shopping list for one household in Turku. It plans the week from your own recipes and splits the shopping list between **S-market** (S-kaupat) and **Lidl Vähäheikkilä**. The UI is in English; ingredient names are Finnish, because that's how you search in the store.
 
 - **Recipes:** import from a web link (schema.org JSON-LD, with Claude as fallback), photos or scans (Claude vision; many pages → one recipe, or one page → many recipes), files (PDF, .docx, .txt, .md), or type them in. Every import ends in a review screen, and the original stays linked to the recipe.
 - **Plan:** pick recipes yourself, or have a week proposed (no repeats from the last 2 weeks, protein variety, pantry items, this week's Lidl offers). You can swap one meal, lock meals and regenerate the rest, and mark meals cooked.
 - **List:** ingredients are merged across recipes (2 dl + 100 ml → 3 dl), and the pantry is subtracted. Staples trigger a "Have it?" question instead of being added. Pack counts come from the product you matched. Everything defaults to S-market and moves to Lidl only on a (cheaper) Lidl offer, with the reason shown. Sections follow each store's walking order. The checklist works offline, and checked items go to the pantry in one tap. Your spouse can use the same list through a share link.
+- **Icons:** each recipe shows its main protein (meat, chicken, fish, vegetarian, vegan) and time/effort (quick, slow, oven, soup).
+- **Refills:** toilet paper, coffee, dish soap… each on its own "every N days" rhythm. Due items are suggested on the week's list.
+- **S-kaupat helpers (Mac):** `npm run match` saves real S-kaupat products for your ingredients (you open the product, it reads the page). `npm run cart` fills your S-kaupat cart from the list (2nd choice if sold out) and picks your preferred delivery slot. You log in and press order yourself. See [helper/README.md](helper/README.md). Their S-kaupat steps are **unverified**.
 - **Stores:** Lidl offers come from leaflet photos or pasted text. S-kaupat product data is a **mock** until the real site can be verified (see [DECISIONS.md](DECISIONS.md)).
+
+Design: the Finnish autumn kitchen: spruce, birch, chanterelle, lingonberry and blueberry colours; every recipe drawn as a plate from its real ingredient colours; Bricolage Grotesque headings + Inter body (both bundled); a forest-night dark theme follows the phone setting (DECISIONS D32). The GitHub repo is still called `Mise`; the app itself is Aitta.
 
 Docs: [PLAN.md](PLAN.md) (architecture, data model) · [DECISIONS.md](DECISIONS.md) (choices, and which data sources are verified or mocked) · [NEXT_SESSION.md](NEXT_SESSION.md) (cart-automation hand-off).
 
@@ -27,15 +34,16 @@ To try it on your phone over wifi: `DEV_ORIGINS=192.168.x.y npm run dev -- -H 0.
 
 | Variable | Needed | Purpose |
 |---|---|---|
-| `APP_PASSCODE` | **yes in production** | Single passcode for the app. Unset = no login (a warning banner is shown). |
+| `APP_PASSCODE` | **yes in production** | Single passcode for the app. Unset = no login (a warning banner is shown). Use at least 12 characters: after 10 wrong tries in 15 minutes, login pauses for the rest of that window. |
 | `SESSION_SECRET` | recommended | Signs the login cookie. Defaults to a value derived from the passcode. |
 | `ANTHROPIC_API_KEY` | for photo import and smart extraction | Used server-side only. Without it, link import (JSON-LD), local file parsing, manual entry and pasted-text offers still work. |
 | `ANTHROPIC_MODEL` | no | Default `claude-sonnet-5`. |
 | `DATABASE_URL` | **yes on Vercel** | Postgres connection string (Supabase transaction pooler, port 6543). |
 | `DB_AUTO_MIGRATE` | no | `1` runs migrations and seed on first connection. |
 | `BLOB_STORE` | **`supabase` on Vercel** | `local` (`./.data/uploads`) or `supabase`. |
-| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET` | with `BLOB_STORE=supabase` | Private bucket for recipe photos and files (default name `mise-originals`). |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET` | with `BLOB_STORE=supabase` | Private bucket for recipe photos and files (default name `aitta-originals`). |
 | `S_MARKET_STORE`, `S_KAUPAT_STORE_ID` | no | Your S-market or Prisma. Seeded once; editable later under More → Stores. |
+| `PGLITE_DIR`, `UPLOADS_DIR` | no | Local only: where the embedded database and uploaded files are kept (default `./.data/pglite`, `./.data/uploads`). |
 | `S_KAUPAT_ADAPTER` | no | `mock` (invented demo catalogue) or `none`. Default: `mock` in dev, `none` in production. |
 
 ## Tests
@@ -53,14 +61,14 @@ The e2e suite imports a recipe from a URL (served by a local fixture server), pl
 
 1. **Supabase:** create a project.
    - Database → Connect → copy the **Transaction pooler** URI (port 6543). That is `DATABASE_URL`.
-   - Storage → create a **private** bucket `mise-originals`.
+   - Storage → create a **private** bucket `aitta-originals`.
    - Project Settings → API → copy the project URL and the `service_role` key.
 2. **Create the tables and seed data** from your machine:
    ```bash
    DATABASE_URL='postgres://…:6543/postgres' npm run db:migrate
    DATABASE_URL='postgres://…:6543/postgres' S_MARKET_STORE='S-market …, Turku' npm run db:seed
    ```
-3. **Vercel:** import the Git repo (framework: Next.js, default build command). Set the environment variables: `APP_PASSCODE`, `SESSION_SECRET`, `ANTHROPIC_API_KEY`, `DATABASE_URL`, `BLOB_STORE=supabase`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET=mise-originals`. Deploy.
+3. **Vercel:** import the Git repo (framework: Next.js, default build command). Set the environment variables: `APP_PASSCODE`, `SESSION_SECRET`, `ANTHROPIC_API_KEY`, `DATABASE_URL`, `BLOB_STORE=supabase`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET=aitta-originals`. Deploy.
 4. Open the site on your phone, log in, then **Add to Home Screen**. Open the shopping list once while online so it also works offline in the store.
 5. Share a list: on the list press **Share** and send the link to your spouse. The link only allows viewing and checking off that one list. **New link** revokes the old one.
 
@@ -68,6 +76,7 @@ Schema changes later: edit `src/db/schema.ts`, run `npm run db:generate`, commit
 
 ## Known gaps
 
+- **The S-kaupat cart helper hasn't touched the real site.** Its page steps are guesses and it pauses to ask you when one fails. Calibrate after the first run (helper/README.md). Check S-kaupat's terms before using it.
 - **S-kaupat data is not real.** s-kaupat.fi was blocked from the build environment, so no endpoint was verified and none was invented. The mock catalogue has made-up prices. In production the adapter is off, and you can type products in by hand when matching. See DECISIONS.md D1 and NEXT_SESSION.md.
 - **lidl.fi is not scraped.** It was blocked the same way. Offers come from leaflet photos (Claude) or pasted text.
 - **Claude calls were not run live.** There was no API key in the build environment. The request code follows the official SDK docs, and tests cover it with a stubbed client. Photo import and Claude extraction need a first real run to confirm prompt quality.

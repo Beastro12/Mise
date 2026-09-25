@@ -8,6 +8,8 @@ import { Badge, PageTitle, Section } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 const LINKS = [
+  { href: "/household", title: "Refills", sub: "Toilet paper, coffee, dish soap: suggested when due" },
+  { href: "/delivery", title: "S-kaupat order helper", sub: "Delivery preferences and how to fill your cart" },
   { href: "/stores", title: "Stores & section order", sub: "S-market store, walking order per store" },
   { href: "/stores/lidl", title: "Lidl offers", sub: "Import this week's leaflet (photo or text)" },
   { href: "/products", title: "Product matches", sub: "Ingredient → S-kaupat product" },
@@ -21,10 +23,10 @@ export default function MorePage() {
   return (
     <div>
       <PageTitle>More</PageTitle>
-      <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+      <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]">
         {LINKS.map((l) => (
           <li key={l.href}>
-            <Link href={l.href} className="block px-4 py-3 hover:bg-surface-2">
+            <Link href={l.href} className="block px-1 py-3.5 hover:bg-surface-2">
               <div className="font-medium">{l.title}</div>
               <div className="text-xs text-muted">{l.sub}</div>
             </Link>
@@ -32,7 +34,7 @@ export default function MorePage() {
         ))}
       </ul>
       <Section title="Status">
-        <dl className="space-y-1.5 rounded-xl border border-line bg-surface p-4 text-sm">
+        <dl className="space-y-2.5 border-y border-line py-4 text-sm">
           <div className="flex justify-between gap-2">
             <dt>Database</dt>
             <dd>{process.env.DATABASE_URL ? "Postgres (DATABASE_URL)" : "Local PGlite (.data/)"}</dd>

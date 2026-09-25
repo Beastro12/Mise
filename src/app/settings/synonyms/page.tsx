@@ -40,9 +40,9 @@ export default async function SynonymsPage(props: PageProps<"/settings/synonyms"
         <form className="mb-2">
           <input name="q" defaultValue={q} placeholder="Filter" className={inputCls} />
         </form>
-        <ul className="divide-y divide-line rounded-xl border border-line bg-surface text-sm">
+        <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)] text-sm">
           {shown.map((r) => (
-            <li key={r.id} className="flex items-center justify-between gap-2 px-3 py-1.5">
+            <li key={r.id} className="flex items-center justify-between gap-2 px-1 py-2">
               <span className="min-w-0 truncate">
                 {r.term} → <span className="font-medium">{r.nameFi}</span> {r.source !== "seed" ? <Badge>{r.source}</Badge> : null}
               </span>

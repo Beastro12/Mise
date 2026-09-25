@@ -12,9 +12,9 @@ export default async function HistoryPage() {
       {rows.length === 0 ? (
         <Empty>Nothing cooked yet. Mark meals as cooked on the plan page.</Empty>
       ) : (
-        <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]">
           {rows.map(({ meal, recipe }) => (
-            <li key={meal.id} className="flex justify-between px-4 py-2.5">
+            <li key={meal.id} className="flex justify-between px-1 py-3">
               <Link href={`/recipes/${recipe.id}`} className="font-medium hover:underline">
                 {recipe.title}
               </Link>

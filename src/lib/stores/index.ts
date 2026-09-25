@@ -34,8 +34,8 @@ class RateLimiter {
   }
 }
 
-const g = globalThis as unknown as { __miseLimiters?: Map<string, RateLimiter> };
-const limiters = (g.__miseLimiters ??= new Map());
+const g = globalThis as unknown as { __aittaLimiters?: Map<string, RateLimiter> };
+const limiters = (g.__aittaLimiters ??= new Map());
 
 export function limiterFor(adapterId: string): RateLimiter {
   if (!limiters.has(adapterId)) limiters.set(adapterId, new RateLimiter(1500, 300));

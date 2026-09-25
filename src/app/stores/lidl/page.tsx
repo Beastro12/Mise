@@ -31,9 +31,9 @@ export default async function LidlOffersPage() {
         {offers.length === 0 ? (
           <Empty>No offers yet. Import this week&apos;s leaflet above.</Empty>
         ) : (
-          <ul className="divide-y divide-line rounded-xl border border-line bg-surface" data-testid="offers">
+          <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]" data-testid="offers">
             {offers.map((o) => (
-              <li key={o.id} className="px-3 py-2">
+              <li key={o.id} className="px-1 py-2.5">
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="font-medium">{o.productName}</span>
                   <span className="shrink-0 tabular">{formatPrice(o.price)}</span>

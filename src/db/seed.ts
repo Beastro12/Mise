@@ -17,7 +17,17 @@ export const DEFAULT_SMARKET_NAME = "S-market (set your store in Settings)";
  */
 export async function seedDatabase(db: AnyDb): Promise<{ seeded: boolean }> {
   const existing = await db.select({ id: schema.stores.id }).from(schema.stores).limit(1);
-  if (existing.length) return { seeded: false };
+  if (existing.length) {
+    // Already seeded: only add vocabulary that newer versions ship (never overwrites).
+    const pairs = seedSynonymPairs();
+    for (let i = 0; i < pairs.length; i += 200) {
+      await db
+        .insert(schema.synonyms)
+        .values(pairs.slice(i, i + 200).map((p) => ({ ...p, source: "seed" as const })))
+        .onConflictDoNothing();
+    }
+    return { seeded: false };
+  }
 
   await db.transaction(async (tx) => {
     await tx

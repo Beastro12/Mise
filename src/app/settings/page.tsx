@@ -31,9 +31,9 @@ export default async function SettingsPage() {
         {rules.length === 0 ? (
           <Empty>No rules. On a list item choose “Always buy X at Lidl”.</Empty>
         ) : (
-          <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]">
             {rules.map((r) => (
-              <li key={r.nameFi} className="flex items-center justify-between px-3 py-2">
+              <li key={r.nameFi} className="flex items-center justify-between px-1 py-2.5">
                 <span>
                   {r.nameFi} → <StoreBadge storeId={r.storeId} />
                 </span>

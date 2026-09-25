@@ -120,3 +120,66 @@ The brief left `S_MARKET_STORE = <FILL IN>`. The app seeds "S-market (set your s
 | lidl.fi weekly offers | **UNVERIFIED → not built** | lidl.fi blocked; leaflet photo/text import used instead |
 | Supabase Postgres | **VERIFIED equivalent** | full e2e suite passed against a local Postgres 16 with the same driver settings |
 | Supabase Storage | **UNVERIFIED live** | follows supabase-js docs; local storage path tested |
+| S-kaupat cart helper (site steps) | **UNVERIFIED** | s-kaupat.fi blocked; guessed URLs/texts with pause-and-ask fallback; plan/slot/guard logic unit-tested; `--dry-run` against the real order feed in e2e |
+| S-kaupat product matching (`npm run match`) | **UNVERIFIED page parsing** | JSON-LD parser unit-tested on schema.org shapes; helper key + write-back API + `--dry-run` covered in e2e; real product pages not seen |
+
+### D30. Name and visual identity: Aitta, "birch & frost"
+Renamed from "Mise FI" (the name belongs to an existing UK app) to **Aitta**, the Finnish word for a traditional food storehouse, chosen by you from a shortlist. **Not trademark- or domain-checked** (not possible from the build environment). Visuals: birch-paper background (#F4F2EE), charcoal ink (#22262A), one fjord-blue accent (#3E6A86), moss for S-market, lake blue for Lidl, hairline borders, squarer corners, Inter variable font bundled from npm (no Google Fonts request at runtime). Dark mode "frost night" follows the system setting. The icon is a line drawing of an aitta on stilts. Renamed internals too: cookie `aitta_session` (existing logins must sign in again), localStorage keys `aitta:*`, service-worker cache `aitta-v1`, default bucket `aitta-originals`.
+
+### D31. Visual refinement: Iittala/Artek calm
+Chosen in the interview: calm near-monochrome, geometric headings, a sage accent used rarely, flat surfaces with no texture. Changes from D30:
+- Palette: warm greys (bg #F5F4F1, ink #1F2220, hairline #E3E1DC). Primary buttons are charcoal. Sage (#5B6F5E) appears only on check marks and messages. Store markers are muted: S-market moss-grey #4A5A4E, Lidl steel #4C6680. Dark theme uses the same palette in reverse.
+- Type: Jost (geometric, bundled via `@fontsource-variable/jost`) for headings and the lowercase "aitta" wordmark; Inter for body text.
+- Layout: lists are flat rows between hairlines instead of boxed cards. Section and store headings are larger with more space around them. Secondary list actions (share, new link, export, open plan) are in a "···" menu. Plan-meal actions are quiet text links.
+- Icons: one line-icon set (nav, the eight store sections), a birch drawing for empty states, and an app icon with charcoal lines on birch white.
+
+### D32. Visual direction v3: the Finnish autumn kitchen (replaces D31)
+You found the calm monochrome look boring and asked for Nordic-kitchen colour that makes the food look appetizing. Palette: spruce #1F3B2E (header band, primary buttons, headings), birch bark #F3EEE6 (background), chanterelle #E3A02F (main actions like "Generate shopping list", the active nav tab, the "Have it at home?" panel), lingonberry #B3263E (Lidl offer tags and prices), blueberry #3A3F78 (Lidl banner). Type: Bricolage Grotesque (bundled) for headings, Inter for body text.
+**Signature:** every recipe gets a top-down "plate" drawn from its real ingredient colours (`src/lib/domain/food-colors.ts` + `src/components/plate.tsx`). Coloured sauces become the plate base, cream bases take on the colour of the meat/fish/veg cooked in them, herbs are sprinkled, and it's seeded per recipe so the drawing never changes. The plates appear on meal cards, the recipe grid, recipe pages and the "add recipes" list. Shopping-list, pantry and recipe ingredients show a small swatch in that food's colour. The header shows the season and week in Finnish ("Syksy · viikko 39") as a small local touch; the rest of the UI stays in English. Empty states show a chanterelle drawing. Dark mode ("forest night") uses chanterelle as the primary colour.
+
+### D33. Recipe icons
+Chosen in the interview: main protein + time/effort (no allergen badges, no icon filter bar). `src/lib/domain/traits.ts` derives one protein: meat / chicken / fish / vegetarian / vegan. It uses tags first, then ingredients. Vegan means vegetarian with no dairy or eggs; plant milks like kookosmaito count as vegan. Effort icons: quick (≤ 30 min or tag), slow (≥ 90 min), soup (tag or title), oven (tag or "uuni"/"asteessa" in the steps). Best effort: set tags to correct a recipe.
+
+### D34. Household refills
+`household_items` (name, Finnish name, quantity, every N days, last bought). An active item is **due** when it has never been bought, or runs out within 7 days of generating the list. Due items appear in a "Running low?" strip on the list (Add / Skip), not straight on the list. Checking a refill off resets its countdown. Refills never go into the food pantry. A refill whose Finnish name is already on the list from a recipe isn't suggested twice.
+
+### D35. S-kaupat cart helper: local, human in the loop, UNVERIFIED selectors
+Chosen in the interview: a helper on your Mac (not the cloud), home delivery, preferred weekday + time window, 2nd choice then report.
+- **App side (verified by e2e):** 2nd-choice product per ingredient (`ingredient_product_map.alternate_product_id`), delivery preferences (`settings.delivery`), and an order feed `GET /api/share/<token>/order`. The feed is readable with the list's share link, has no address or credentials, and MOCK products get `s_kaupat_product_id: null`.
+- **Helper (`helper/`):** Node + Playwright, opens your installed Chrome with a persistent profile in `~/.aitta/skaupat-profile`. You log in yourself; no password is ever stored. Per item it tries the 1st, then 2nd choice. It then opens checkout, picks the delivery method and slot (`chooseSlot`: preferred day + window → same day → earliest), and **stops**. A click guard (`FORBIDDEN_CLICK`) refuses order/pay buttons.
+- **UNVERIFIED:** s-kaupat.fi was blocked from the build environment, so the search/cart URLs and button texts in `helper/lib/site-skaupat.mjs` are guesses. Every site step falls back to "please do this by hand, press Enter", so the flow completes even when a guess is wrong. The pure logic (plan, slot choice, click guard) is unit-tested, and `--dry-run` against the real order feed runs in e2e.
+- Automating a logged-in account may be restricted by S-kaupat's terms. The helper is personal, low-volume and attended.
+
+### D36. Look & feel extras
+- **In season:** `src/lib/domain/season.ts`, a rough monthly list of Finnish produce, with recipes that use it.
+- **Recipe photos:** the schema.org `image` from web imports is downloaded (same private-address guard, re-checked on each redirect, ≤ 6 MB) and shown instead of the plate. Cookbook-page scans are not used as photos.
+- **Week strip:** Mon–Sun plates at the top of the plan.
+- **Cost estimate:** sum of known item prices × packs on the list, with a count of unpriced items. With the mock/none S-kaupat adapter this is only as good as the prices you enter.
+
+### D37. Real products via the Mac helper (`npm run match`), UNVERIFIED page parsing
+S-kaupat's product data still can't be read from a server (D1), and no endpoint is invented. Instead you open the product in S-kaupat yourself on the Mac, and the helper reads that page and saves it in Aitta.
+- **How it reads a page:** schema.org Product JSON-LD (`gtin13`/`gtin`/`sku`, `offers.price`, `brand`), then `og:title` and an EAN in the URL. Pack size comes from the product name ("2 dl", "6 x 330 ml", "8 rl" → 8 kpl). Whether s-kaupat.fi publishes JSON-LD is **unverified**. If not, the helper says it couldn't read the page and skips it; nothing is guessed.
+- **Write-back:** `GET /api/helper/unmatched` and `POST /api/helper/products`, authorised by a **helper key** (Bearer), not the passcode. The key is created on More → S-kaupat order, shown once, stored only as a SHA-256 hash, and replaced or revoked there. It can only list unmatched S-market items and save products (source `s-kaupat`, 1st choice → mapping and open lists, 2nd choice → alternate).
+- **On the Mac:** the app address and key live in `~/.aitta/config.json` (mode 600), or in `AITTA_URL`/`AITTA_HELPER_KEY`. The S-kaupat login stays in the browser profile; no password is stored anywhere.
+
+### D38. Dark-mode contrast, Mac launchers, CI
+- **Dark mode:** checked by running the e2e suite with `COLOR_SCHEME=dark SHOTS=<dir>`. Three spots were unreadable because an `-ink` token (text on the *solid* colour, dark in dark mode) was used on a `-soft` background, which is also dark in dark mode, and because the Lidl banner hardcoded white text on a colour that turns light. New tokens: `chanterelle-deep` (text on chanterelle-soft) and `lidl-ink` (text on solid Lidl).
+- **Launchers:** `helper/Aitta Match.command` and `helper/Aitta Cart.command` open in Terminal on double-click. They install dependencies on first run and wait for Enter before closing. Prompts now stop with a message when input ends, instead of the script exiting silently.
+- **CI** (`.github/workflows/ci.yml`): typecheck (after `next typegen`), lint, unit tests and build in one job; the Playwright e2e suite in another (traces uploaded on failure).
+
+### D39. Security review fixes (pre-merge)
+- **Uploaded files** are served inline only for known-safe types (JPEG/PNG/WebP/GIF/HEIC, PDF, plain text/Markdown). Everything else downloads as `application/octet-stream`, with `nosniff` and a sandboxing CSP, so an uploaded SVG or HTML file can't run script in the app. PDFs skip the sandbox, because Chrome won't render a PDF under it.
+- **Link-import fetch guard** uses Node's `net.BlockList`. It covers IPv4-mapped IPv6 (`[::ffff:169.254.169.254]`), NAT64, CGNAT, multicast and reserved ranges. Photo downloads stream with the 6 MB cap and one 12 s deadline covering all redirects and the body. Known limit: DNS is checked before the fetch, not pinned, so a DNS-rebinding host could still slip through. That is acceptable for a single-owner app whose URL import needs the owner's login.
+- **Login attempt limit:** 10 wrong passcodes within 15 minutes pause logins for the rest of that window. The counter is stored in the database, because serverless instances don't share memory. Logged-in devices keep their 180-day cookie.
+- **Headers:** `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` and a restrictive `Permissions-Policy` on every response. CI runs with a read-only `GITHUB_TOKEN`.
+
+### D40. Review fixes: refills and the Mac helper
+- **One row per ingredient.** A due refill whose ingredient is already on the week's list (to buy, a staple question, or covered by the pantry) merges into that row rather than adding a second one. Checking that row off counts as buying the refill. Unchecking on the same day undoes it (back to due). The household list keeps one item per ingredient: adding it again updates it. Its section comes from the vocabulary even for one-tap suggestions. Covered by a PGlite integration test (`tests/unit/household-list.test.ts`).
+- **Cart helper:**
+  - It only acts on an EAN search with exactly one result, and presses "+" inside that product's card (otherwise it asks you).
+  - The add-button pattern no longer matches "Lue lisää".
+  - The never-order guard also refuses buttons without readable text.
+  - "Leave it to S-kaupat" no longer uses your 2nd choice.
+  - It warns that quantities add to what's already in the cart.
+  - The browser profile folder is readable only by you.
+- **Product parser:** prefers the page's own Product over "related products" (URL match, then offer + GTIN). It reads the first offer that has a price, and only accepts EANs with a valid GS1 check digit.

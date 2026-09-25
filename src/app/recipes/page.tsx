@@ -1,6 +1,10 @@
 import Link from "next/link";
-import { allTags, listRecipes } from "@/lib/services/recipes";
-import { Badge, Empty, LinkButton, PageTitle, cx, inputCls } from "@/components/ui";
+import { allTags, getAllRecipesWithIngredients, listRecipes } from "@/lib/services/recipes";
+import { accentFor } from "@/lib/domain/food-colors";
+import { RecipeCover } from "@/components/recipe-visual";
+import { TraitBadges } from "@/components/trait-badges";
+import { recipeTraits } from "@/lib/domain/traits";
+import { Empty, LinkButton, PageTitle, cx, inputCls } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +12,9 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
   const sp = await props.searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const tag = typeof sp.tag === "string" ? sp.tag : "";
-  const [recipes, tags] = await Promise.all([listRecipes({ q, tag }), allTags()]);
+  const [recipes, tags, full] = await Promise.all([listRecipes({ q, tag }), allTags(), getAllRecipesWithIngredients()]);
+  const ingOf = new Map(full.map((r) => [r.id, r.ingredients]));
+  const fullOf = new Map(full.map((r) => [r.id, r]));
   return (
     <div>
       <PageTitle sub={`${recipes.length} recipe${recipes.length === 1 ? "" : "s"}`} action={<LinkButton href="/recipes/import" variant="primary">+ Add</LinkButton>}>
@@ -19,14 +25,14 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
         {tag ? <input type="hidden" name="tag" value={tag} /> : null}
       </form>
       <div className="mb-4 flex flex-wrap gap-1.5">
-        <Link href="/recipes" className={cx("rounded-full border px-2.5 py-0.5 text-xs", !tag ? "border-accent bg-accent-soft text-accent" : "border-line text-muted")}>
+        <Link href="/recipes" className={cx("rounded-full border px-3 py-1 text-xs font-semibold", !tag ? "border-primary bg-primary text-primary-ink" : "border-line bg-surface text-muted")}>
           all
         </Link>
         {tags.map((t) => (
           <Link
             key={t}
             href={`/recipes?tag=${encodeURIComponent(t)}`}
-            className={cx("rounded-full border px-2.5 py-0.5 text-xs", tag === t ? "border-accent bg-accent-soft text-accent" : "border-line text-muted")}
+            className={cx("rounded-full border px-3 py-1 text-xs font-semibold", tag === t ? "border-primary bg-primary text-primary-ink" : "border-line bg-surface text-muted")}
           >
             {t}
           </Link>
@@ -35,23 +41,25 @@ export default async function RecipesPage(props: PageProps<"/recipes">) {
       {recipes.length === 0 ? (
         <Empty>No recipes match. Import one from a link, photo or file.</Empty>
       ) : (
-        <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+        <ul className="grid grid-cols-2 gap-3">
           {recipes.map((r) => {
             const mins = (r.prepMinutes ?? 0) + (r.cookMinutes ?? 0);
+            const ings = ingOf.get(r.id) ?? [];
+            const tint = accentFor(ings);
             return (
               <li key={r.id}>
-                <Link href={`/recipes/${r.id}`} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-2">
-                  <div className="min-w-0">
-                    <div className="truncate font-medium">{r.title}</div>
-                    <div className="mt-0.5 flex flex-wrap gap-1">
-                      {r.tags.slice(0, 4).map((t) => (
-                        <Badge key={t}>{t}</Badge>
-                      ))}
+                <Link
+                  href={`/recipes/${r.id}`}
+                  className="flex h-full flex-col overflow-hidden rounded-3xl bg-surface shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)] transition active:scale-[.98]"
+                >
+                  <RecipeCover recipe={r} ingredients={ings} tint={tint} plateSize={92} className="h-[124px]" />
+                  <div className="flex flex-1 flex-col p-3">
+                    <div className="font-display text-[16px] font-[650] leading-tight tracking-[-0.01em]">{r.title}</div>
+                    <div className="mt-auto pt-2 text-xs text-muted tabular">
+                      {mins ? `${mins} min · ` : ""}
+                      {r.servings} serv.
                     </div>
-                  </div>
-                  <div className="shrink-0 text-right text-xs text-muted tabular">
-                    {mins ? `${mins} min` : ""}
-                    <div>{r.servings} serv.</div>
+                    <TraitBadges className="mt-2" traits={recipeTraits(fullOf.get(r.id) ?? { ...r, ingredients: [] })} />
                   </div>
                 </Link>
               </li>

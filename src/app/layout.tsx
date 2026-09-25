@@ -1,13 +1,16 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/bricolage-grotesque";
 import "./globals.css";
 import { BottomNav } from "@/components/nav";
+import { TopBar } from "@/components/top-bar";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { authEnabled } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "Mise FI",
+  title: "Aitta",
   description: "Meal planner and shopping list for S-market and Lidl in Turku",
-  appleWebApp: { capable: true, title: "Mise FI", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Aitta", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
@@ -15,8 +18,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f5f0" },
-    { media: "(prefers-color-scheme: dark)", color: "#121513" },
+    { media: "(prefers-color-scheme: light)", color: "#1f3b2e" },
+    { media: "(prefers-color-scheme: dark)", color: "#101913" },
   ],
 };
 
@@ -28,7 +31,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {open ? (
           <div className="bg-warn-soft px-4 py-1.5 text-center text-xs text-warn">No APP_PASSCODE set: anyone with the URL can use this app.</div>
         ) : null}
-        <main className="mx-auto max-w-xl px-4 pb-28 pt-5">{children}</main>
+        <TopBar />
+        <main className="mx-auto max-w-xl px-5 pb-28 pt-4">{children}</main>
         <BottomNav />
         <ServiceWorkerRegister />
       </body>

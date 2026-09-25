@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRecipe } from "@/lib/services/recipes";
+import { accentFor, foodColor, plateFor } from "@/lib/domain/food-colors";
+import { Plate } from "@/components/plate";
+import { photoId } from "@/components/recipe-visual";
+import { TraitBadges } from "@/components/trait-badges";
+import { recipeTraits } from "@/lib/domain/traits";
 import { deleteRecipeAction } from "@/app/actions/recipes";
 import { scaleQuantity } from "@/lib/domain/scaling";
 import { formatQty } from "@/lib/domain/units";
@@ -18,6 +23,17 @@ export default async function RecipePage(props: PageProps<"/recipes/[id]">) {
   const mins = (r.prepMinutes ?? 0) + (r.cookMinutes ?? 0);
   return (
     <div>
+      <div
+        className="-mx-5 -mt-4 mb-5 flex justify-center pt-6 pb-8"
+        style={{ background: `radial-gradient(ellipse at 50% 70%, ${accentFor(r.ingredients)}66, ${accentFor(r.ingredients)}14 70%, transparent)` }}
+      >
+        {photoId(r) ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`/api/originals/${photoId(r)}`} alt="" className="mx-5 h-52 w-full max-w-md rounded-3xl object-cover shadow-[0_16px_30px_-18px_rgba(0,0,0,.5)]" data-testid="recipe-photo" />
+        ) : (
+          <Plate spec={plateFor(r.ingredients)} seed={r.id} size={176} />
+        )}
+      </div>
       <PageTitle
         sub={
           <>
@@ -30,6 +46,7 @@ export default async function RecipePage(props: PageProps<"/recipes/[id]">) {
       >
         {r.title}
       </PageTitle>
+      <TraitBadges className="mb-3" traits={recipeTraits(r)} />
       <div className="flex flex-wrap gap-1">
         {r.tags.map((t) => (
           <Badge key={t}>{t}</Badge>
@@ -53,13 +70,14 @@ export default async function RecipePage(props: PageProps<"/recipes/[id]">) {
         }
       >
         {target !== r.servings ? <p className="mb-2 text-xs text-muted">Scaled from {r.servings} servings.</p> : null}
-        <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-3xl bg-surface px-4 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]">
           {r.ingredients.map((i) => {
             const q = scaleQuantity(i.quantity, r.servings, target);
             return (
-              <li key={i.id} className="px-4 py-2">
+              <li key={i.id} className="px-1 py-2.5">
                 <div className="flex items-baseline justify-between gap-3">
                   <span>
+                    <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle ring-1 ring-black/10" style={{ background: foodColor(i.nameFi, i.category) }} />
                     <span className="font-medium">{i.nameFi}</span>
                     {i.prepNote ? <span className="text-muted">, {i.prepNote}</span> : null}
                     {i.optional ? <span className="text-muted"> (optional)</span> : null}

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ownerRoute } from "@/lib/api";
-import { answerStaple, deleteItem, setChecked, setItemStore } from "@/lib/services/lists";
+import { answerRefill, answerStaple, deleteItem, setChecked, setItemStore } from "@/lib/services/lists";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request, ctx: RouteContext<"/api/lists/[id]/items/[itemId]">) {
   return ownerRoute(async () => {
     const { id, itemId } = await ctx.params;
-    const body = (await req.json()) as { action: string; checked?: boolean; storeId?: string; remember?: boolean; have?: boolean };
+    const body = (await req.json()) as { action: string; checked?: boolean; storeId?: string; remember?: boolean; have?: boolean; add?: boolean };
     switch (body.action) {
       case "check":
         await setChecked(id, itemId, !!body.checked);
@@ -18,6 +18,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/lists/[id]/item
         break;
       case "staple":
         await answerStaple(id, itemId, !!body.have);
+        break;
+      case "refill":
+        await answerRefill(id, itemId, !!body.add);
         break;
       case "delete":
         await deleteItem(id, itemId);

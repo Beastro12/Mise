@@ -15,7 +15,7 @@ http
       res.writeHead(404).end("not found");
       return;
     }
-    res.writeHead(200, { "content-type": name.endsWith(".html") ? "text/html; charset=utf-8" : "application/octet-stream" });
+    res.writeHead(200, { "content-type": name.endsWith(".html") ? "text/html; charset=utf-8" : name.endsWith(".jpg") ? "image/jpeg" : "application/octet-stream" });
     fs.createReadStream(file).pipe(res);
   })
   .listen(port, "127.0.0.1", () => console.log(`fixtures on ${port}`));

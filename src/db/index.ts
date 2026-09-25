@@ -8,8 +8,8 @@ export type DB = PgDatabase<PgQueryResultHKT, typeof schema>;
 
 type DbState = { promise: Promise<DB> | null; close: (() => Promise<void>) | null };
 
-const g = globalThis as unknown as { __miseDb?: DbState };
-const state: DbState = (g.__miseDb ??= { promise: null, close: null });
+const g = globalThis as unknown as { __aittaDb?: DbState };
+const state: DbState = (g.__aittaDb ??= { promise: null, close: null });
 
 const migrationsFolder = path.join(process.cwd(), "drizzle");
 

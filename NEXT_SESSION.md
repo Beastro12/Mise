@@ -1,5 +1,9 @@
 # Next session: S-kaupat cart automation
 
+> **Update:** a first version now exists: `helper/` (Mac, Playwright, you log in, it fills the cart and picks the slot, then stops) plus the order feed `GET /api/share/<token>/order` with 2nd choices and delivery preferences. What's left is verifying it against the real site: steps 1–2 below, then fix the guesses in `helper/lib/site-skaupat.mjs`. Allow `www.s-kaupat.fi` in the session's network settings, or run the helper once with `--dry-run` and then for real, and report where it had to ask you.
+>
+> **Also new:** `npm run match` (D37) saves real S-kaupat products by reading the product page you open (schema.org JSON-LD, unverified for s-kaupat.fi). If it can't read a product page, record that page's structure (does it have `application/ld+json`? where are the EAN and price?) and adjust `helper/lib/product.mjs`. Step 3 below (re-mapping away from mock products) is what `npm run match` does.
+
 This session built the planner and list. It did **not** touch S-kaupat carts, orders or login (out of scope). What follows is what the cart-automation session needs.
 
 ## The seam that exists
