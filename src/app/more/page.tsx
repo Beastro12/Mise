@@ -8,6 +8,8 @@ import { Badge, PageTitle, Section } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 const LINKS = [
+  { href: "/household", title: "Refills", sub: "Toilet paper, coffee, dish soap: suggested when due" },
+  { href: "/delivery", title: "S-kaupat order helper", sub: "Delivery preferences and how to fill your cart" },
   { href: "/stores", title: "Stores & section order", sub: "S-market store, walking order per store" },
   { href: "/stores/lidl", title: "Lidl offers", sub: "Import this week's leaflet (photo or text)" },
   { href: "/products", title: "Product matches", sub: "Ingredient → S-kaupat product" },

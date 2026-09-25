@@ -186,12 +186,18 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
 
   const buy = list.items.filter((i) => i.state === "none" || (mode === "share" && i.state === "ask"));
   const ask = mode === "owner" ? list.items.filter((i) => i.state === "ask") : [];
+  const refills = mode === "owner" ? list.items.filter((i) => i.state === "refill") : [];
   const covered = list.items.filter((i) => i.state === "covered" || i.state === "have");
   const groups = useMemo(() => groupForDisplay(buy, list.sectionOrder), [buy, list.sectionOrder]);
   const checkedToPantry = list.items.filter((i) => i.checked && !i.movedToPantry).length;
   const unmatched = list.items.filter((i) => i.storeId === "smarket" && i.state === "none" && !i.product).length;
   const storeName = (id: string) => list.stores.find((s) => s.id === id)?.name ?? (id === "lidl" ? "Lidl" : "S-market");
   const done = buy.filter((i) => i.checked).length;
+  const toBuy = list.items.filter((i) => i.state === "none");
+  const cost = (store: string) => toBuy.filter((i) => i.storeId === store && i.price != null).reduce((sum, i) => sum + i.price! * (i.packs ?? 1), 0);
+  const unpriced = toBuy.filter((i) => i.price == null).length;
+  const costS = cost("smarket");
+  const costL = cost("lidl");
   const shareUrl = typeof window !== "undefined" && list.shareToken ? `${window.location.origin}/share/${list.shareToken}` : null;
 
   async function share() {
@@ -216,6 +222,16 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
         {online ? <Badge tone="accent">online</Badge> : <Badge tone="warn">offline</Badge>}
         {pendingCount ? <Badge tone="warn">{pendingCount} to sync</Badge> : null}
       </div>
+
+      {costS || costL ? (
+        <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-2xl bg-surface px-4 py-3 shadow-[0_12px_28px_-22px_rgba(60,40,10,.45)]" data-testid="cost">
+          <span className="font-display text-lg font-[680] tabular text-primary">≈ {formatPrice(costS + costL)}</span>
+          <span className="text-xs text-muted tabular">
+            S-market {formatPrice(costS)} · Lidl {formatPrice(costL)}
+            {unpriced ? ` · ${unpriced} item${unpriced === 1 ? "" : "s"} without a price` : ""}
+          </span>
+        </div>
+      ) : null}
 
       {mode === "owner" ? (
         <div className="mb-6 flex items-center gap-2">
@@ -276,6 +292,30 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
                   </button>
                   <button className={btn.small} disabled={busy} onClick={() => ownerCall(`${base}/items/${i.id}`, { action: "staple", have: false })}>
                     Need it
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {refills.length ? (
+        <div className="mb-8 rounded-3xl bg-lidl-soft p-4" data-testid="refills">
+          <div className="mb-1 font-display text-lg font-[680] text-lidl">Running low?</div>
+          <p className="mb-3 text-xs text-muted">Household refills due before your next shop.</p>
+          <ul className="space-y-2">
+            {refills.map((i) => (
+              <li key={i.id} className="flex items-center justify-between gap-2" data-testid="refill" data-name={i.nameFi}>
+                <span className="text-sm font-semibold">
+                  {i.displayName} <span className="font-normal text-muted">{formatQty(i)}</span>
+                </span>
+                <span className="flex gap-1">
+                  <button className={btn.small} disabled={busy} onClick={() => ownerCall(`${base}/items/${i.id}`, { action: "refill", add: true })}>
+                    Add
+                  </button>
+                  <button className={btn.small} disabled={busy} onClick={() => ownerCall(`${base}/items/${i.id}`, { action: "refill", add: false })}>
+                    Skip
                   </button>
                 </span>
               </li>

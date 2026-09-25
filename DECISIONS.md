@@ -120,6 +120,7 @@ The brief left `S_MARKET_STORE = <FILL IN>`. The app seeds "S-market (set your s
 | lidl.fi weekly offers | **UNVERIFIED → not built** | lidl.fi blocked; leaflet photo/text import used instead |
 | Supabase Postgres | **VERIFIED equivalent** | full e2e suite passed against a local Postgres 16 with the same driver settings |
 | Supabase Storage | **UNVERIFIED live** | follows supabase-js docs; local storage path tested |
+| S-kaupat cart helper (site steps) | **UNVERIFIED** | s-kaupat.fi blocked; guessed URLs/texts with pause-and-ask fallback; plan/slot/guard logic unit-tested; `--dry-run` against the real order feed in e2e |
 
 ### D30. Name and visual identity: Aitta, "birch & frost"
 Renamed from "Mise FI" (the name belongs to an existing UK app) to **Aitta**, the Finnish word for a traditional food storehouse, chosen by you from a shortlist. **Not trademark- or domain-checked** (not possible from the build environment). Visuals: birch-paper background (#F4F2EE), charcoal ink (#22262A), one fjord-blue accent (#3E6A86), moss for S-market, lake blue for Lidl, hairline borders, squarer corners, Inter variable font bundled from npm (no Google Fonts request at runtime). Dark mode "frost night" follows the system setting. The icon is a line drawing of an aitta on stilts. Renamed internals too: cookie `aitta_session` (existing logins must sign in again), localStorage keys `aitta:*`, service-worker cache `aitta-v1`, default bucket `aitta-originals`.
@@ -134,3 +135,22 @@ Chosen in the interview: calm near-monochrome, geometric headings, a sage accent
 ### D32. Visual direction v3: the Finnish autumn kitchen (replaces D31)
 You found the calm monochrome look boring and asked for Nordic-kitchen colour that makes the food look appetizing. Palette: spruce #1F3B2E (header band, primary buttons, headings), birch bark #F3EEE6 (background), chanterelle #E3A02F (main actions like "Generate shopping list", the active nav tab, the "Have it at home?" panel), lingonberry #B3263E (Lidl offer tags and prices), blueberry #3A3F78 (Lidl banner). Type: Bricolage Grotesque (bundled) for headings, Inter for body text.
 **Signature:** every recipe gets a top-down "plate" drawn from its real ingredient colours (`src/lib/domain/food-colors.ts` + `src/components/plate.tsx`). Coloured sauces become the plate base, cream bases take on the colour of the meat/fish/veg cooked in them, herbs are sprinkled, and it's seeded per recipe so the drawing never changes. The plates appear on meal cards, the recipe grid, recipe pages and the "add recipes" list. Shopping-list, pantry and recipe ingredients show a small swatch in that food's colour. The header shows the season and week in Finnish ("Syksy · viikko 39") as a small local touch; the rest of the UI stays in English. Empty states show a chanterelle drawing. Dark mode ("forest night") uses chanterelle as the primary colour.
+
+### D33. Recipe icons
+Chosen in the interview: main protein + time/effort (no allergen badges, no icon filter bar). `src/lib/domain/traits.ts` derives one protein: meat / chicken / fish / vegetarian / vegan. It uses tags first, then ingredients. Vegan means vegetarian with no dairy or eggs; plant milks like kookosmaito count as vegan. Effort icons: quick (≤ 30 min or tag), slow (≥ 90 min), soup (tag or title), oven (tag or "uuni"/"asteessa" in the steps). Best effort: set tags to correct a recipe.
+
+### D34. Household refills
+`household_items` (name, Finnish name, quantity, every N days, last bought). An active item is **due** when it has never been bought, or runs out within 7 days of generating the list. Due items appear in a "Running low?" strip on the list (Add / Skip), not straight on the list. Checking a refill off resets its countdown. Refills never go into the food pantry. A refill whose Finnish name is already on the list from a recipe isn't suggested twice.
+
+### D35. S-kaupat cart helper: local, human in the loop, UNVERIFIED selectors
+Chosen in the interview: a helper on your Mac (not the cloud), home delivery, preferred weekday + time window, 2nd choice then report.
+- **App side (verified by e2e):** 2nd-choice product per ingredient (`ingredient_product_map.alternate_product_id`), delivery preferences (`settings.delivery`), and an order feed `GET /api/share/<token>/order`. The feed is readable with the list's share link, has no address or credentials, and MOCK products get `s_kaupat_product_id: null`.
+- **Helper (`helper/`):** Node + Playwright, opens your installed Chrome with a persistent profile in `~/.aitta/skaupat-profile`. You log in yourself; no password is ever stored. Per item it tries the 1st, then 2nd choice. It then opens checkout, picks the delivery method and slot (`chooseSlot`: preferred day + window → same day → earliest), and **stops**. A click guard (`FORBIDDEN_CLICK`) refuses order/pay buttons.
+- **UNVERIFIED:** s-kaupat.fi was blocked from the build environment, so the search/cart URLs and button texts in `helper/lib/site-skaupat.mjs` are guesses. Every site step falls back to "please do this by hand, press Enter", so the flow completes even when a guess is wrong. The pure logic (plan, slot choice, click guard) is unit-tested, and `--dry-run` against the real order feed runs in e2e.
+- Automating a logged-in account may be restricted by S-kaupat's terms. The helper is personal, low-volume and attended.
+
+### D36. Look & feel extras
+- **In season:** `src/lib/domain/season.ts`, a rough monthly list of Finnish produce, with recipes that use it.
+- **Recipe photos:** the schema.org `image` from web imports is downloaded (same private-address guard, re-checked on each redirect, ≤ 6 MB) and shown instead of the plate. Cookbook-page scans are not used as photos.
+- **Week strip:** Mon–Sun plates at the top of the plan.
+- **Cost estimate:** sum of known item prices × packs on the list, with a count of unpriced items. With the mock/none S-kaupat adapter this is only as good as the prices you enter.

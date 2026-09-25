@@ -7,6 +7,9 @@ A personal meal planner and shopping list for one household in Turku. It plans t
 - **Recipes:** import from a web link (schema.org JSON-LD, with Claude as fallback), photos or scans (Claude vision; many pages → one recipe, or one page → many recipes), files (PDF, .docx, .txt, .md), or type them in. Every import ends in a review screen, and the original stays linked to the recipe.
 - **Plan:** pick recipes yourself, or have a week proposed (no repeats from the last 2 weeks, protein variety, pantry items, this week's Lidl offers). You can swap one meal, lock meals and regenerate the rest, and mark meals cooked.
 - **List:** ingredients are merged across recipes (2 dl + 100 ml → 3 dl), and the pantry is subtracted. Staples trigger a "Have it?" question instead of being added. Pack counts come from the product you matched. Everything defaults to S-market and moves to Lidl only on a (cheaper) Lidl offer, with the reason shown. Sections follow each store's walking order. The checklist works offline, and checked items go to the pantry in one tap. Your spouse can use the same list through a share link.
+- **Icons:** each recipe shows its main protein (meat, chicken, fish, vegetarian, vegan) and time/effort (quick, slow, oven, soup).
+- **Refills:** toilet paper, coffee, dish soap… each on its own "every N days" rhythm. Due items are suggested on the week's list.
+- **S-kaupat order helper:** a script on your Mac fills your S-kaupat cart from the list (2nd choice if sold out) and picks your preferred delivery slot. You log in and press order yourself. See [helper/README.md](helper/README.md). Its S-kaupat steps are **unverified**.
 - **Stores:** Lidl offers come from leaflet photos or pasted text. S-kaupat product data is a **mock** until the real site can be verified (see [DECISIONS.md](DECISIONS.md)).
 
 Design: the Finnish autumn kitchen: spruce, birch, chanterelle, lingonberry and blueberry colours; every recipe drawn as a plate from its real ingredient colours; Bricolage Grotesque headings + Inter body (both bundled); a forest-night dark theme follows the phone setting (DECISIONS D32). The GitHub repo is still called `Mise`; the app itself is Aitta.
@@ -72,6 +75,7 @@ Schema changes later: edit `src/db/schema.ts`, run `npm run db:generate`, commit
 
 ## Known gaps
 
+- **The S-kaupat cart helper hasn't touched the real site.** Its page steps are guesses and it pauses to ask you when one fails. Calibrate after the first run (helper/README.md). Check S-kaupat's terms before using it.
 - **S-kaupat data is not real.** s-kaupat.fi was blocked from the build environment, so no endpoint was verified and none was invented. The mock catalogue has made-up prices. In production the adapter is off, and you can type products in by hand when matching. See DECISIONS.md D1 and NEXT_SESSION.md.
 - **lidl.fi is not scraped.** It was blocked the same way. Offers come from leaflet photos (Claude) or pasted text.
 - **Claude calls were not run live.** There was no API key in the build environment. The request code follows the official SDK docs, and tests cover it with a stubbed client. Photo import and Claude extraction need a first real run to confirm prompt quality.

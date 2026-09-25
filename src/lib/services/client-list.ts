@@ -32,6 +32,7 @@ export function toClientList(data: ListData, owner: boolean): ClientList {
         offer: o ? { productName: o.productName, price: o.price, validTo: o.validTo } : null,
         sources: [...new Set(i.sources.map((s) => s.title))],
         state: i.state,
+        household: !!i.householdItemId,
         note: i.note,
         manual: i.manual,
         checked: i.checked,

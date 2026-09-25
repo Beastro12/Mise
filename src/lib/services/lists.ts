@@ -13,6 +13,7 @@ import { getStaples, normalizeMany } from "./vocab";
 import { listCurrentOffers, toOfferInfo } from "./offers";
 import { addToPantry } from "./pantry";
 import { refreshMappedProducts } from "./products";
+import { dueHousehold, markBought } from "./household";
 
 export type ItemRow = typeof schema.shoppingItems.$inferSelect;
 export type ListRow = typeof schema.shoppingLists.$inferSelect;
@@ -88,12 +89,13 @@ export async function generateListForPlan(planId: string): Promise<string> {
     });
 
   const today = todayHelsinki();
-  const [pantry, staples, offers, rules, mappings] = await Promise.all([
+  const [pantry, staples, offers, rules, mappings, due] = await Promise.all([
     db.select().from(schema.pantryItems),
     getStaples(),
     listCurrentOffers(today),
     db.select().from(schema.storeRules),
     loadMappings(),
+    dueHousehold(today),
   ]);
 
   let list = data.list;
@@ -152,6 +154,39 @@ export async function generateListForPlan(planId: string): Promise<string> {
             checked: prev?.checked ?? false,
             checkedAt: prev?.checkedAt ?? null,
             movedToPantry: prev?.movedToPantry ?? false,
+          };
+        }),
+      );
+    }
+    // Household refills due before the next shop: suggested, you decide per item.
+    const inList = new Set(built.filter((b) => b.state === "none").map((b) => b.nameFi));
+    const prevRefill = new Map(previous.filter((p) => p.householdItemId).map((p) => [p.householdItemId!, p]));
+    const refills = due.filter((h) => !inList.has(h.nameFi));
+    if (refills.length) {
+      const ruleOf = new Map(rules.map((r) => [r.nameFi, r.storeId]));
+      await tx.insert(schema.shoppingItems).values(
+        refills.map((h) => {
+          const prev = prevRefill.get(h.id);
+          const storeId = ruleOf.get(h.nameFi) ?? "smarket";
+          const product = mappings.get(h.nameFi)?.[storeId] ?? null;
+          return {
+            listId: list!.id,
+            nameFi: h.nameFi,
+            displayName: h.name,
+            quantity: h.quantity,
+            unit: h.unit,
+            section: h.section,
+            storeId,
+            storeReason: ruleOf.has(h.nameFi) ? `Your rule: always at ${storeId === "lidl" ? "Lidl" : "S-market"}` : null,
+            productId: product?.id ?? null,
+            packs: product ? packsNeeded(h.quantity, h.unit, product.packSize, product.packUnit) : null,
+            price: product?.price ?? null,
+            sources: [],
+            state: (prev && (prev.state === "none" || prev.state === "skipped") ? prev.state : "refill") as ItemRow["state"],
+            note: "Household refill",
+            householdItemId: h.id,
+            checked: prev?.checked ?? false,
+            checkedAt: prev?.checkedAt ?? null,
           };
         }),
       );
@@ -227,7 +262,9 @@ async function itemInList(itemId: string, listId: string) {
 }
 
 export async function setChecked(listId: string, itemId: string, checked: boolean) {
-  await itemInList(itemId, listId);
+  const item = await itemInList(itemId, listId);
+  // Buying a household refill resets its countdown.
+  if (checked && item.householdItemId) await markBought(item.householdItemId);
   const db = await getDb();
   await db
     .update(schema.shoppingItems)
@@ -302,6 +339,7 @@ export async function moveCheckedToPantry(listId: string) {
     .from(schema.shoppingItems)
     .where(and(eq(schema.shoppingItems.listId, listId), eq(schema.shoppingItems.checked, true), eq(schema.shoppingItems.movedToPantry, false)));
   for (const it of items) {
+    if (it.householdItemId) continue; // refills (toilet paper…) don't belong in the food pantry
     await addToPantry({ name: it.displayName, nameFi: it.nameFi, quantity: it.quantity, unit: it.unit, category: it.section });
   }
   if (items.length) {
@@ -372,4 +410,55 @@ export async function applyMappingToLists(nameFi: string, productId: string | nu
     touched.add(it.listId);
   }
   for (const id of touched) await bump(id);
+}
+
+/** "Add to list" / "Not this time" for a suggested household refill. */
+export async function answerRefill(listId: string, itemId: string, add: boolean) {
+  await itemInList(itemId, listId);
+  const db = await getDb();
+  await db
+    .update(schema.shoppingItems)
+    .set({ state: add ? "none" : "skipped", updatedAt: new Date() })
+    .where(eq(schema.shoppingItems.id, itemId));
+  await bump(listId);
+}
+
+/**
+ * Order feed for the local S-kaupat cart helper (helper/skaupat-cart.mjs):
+ * S-market items to buy with first and second-choice products, plus delivery
+ * preferences. No address or credentials are included.
+ */
+export async function orderForHelper(listId: string, delivery: unknown) {
+  const data = await getList(listId);
+  if (!data) return null;
+  const db = await getDb();
+  const maps = await db
+    .select()
+    .from(schema.ingredientProductMap)
+    .where(eq(schema.ingredientProductMap.storeId, "smarket"));
+  const altIds = maps.map((m) => m.alternateProductId).filter(Boolean) as string[];
+  const alts = altIds.length ? await db.select().from(schema.products).where(inArray(schema.products.id, altIds)) : [];
+  const altOf = new Map(maps.filter((m) => m.alternateProductId).map((m) => [m.nameFi, alts.find((a) => a.id === m.alternateProductId) ?? null]));
+  const products = new Map(data.products.map((p) => [p.id, p]));
+  const toBuy = data.items.filter((i) => i.storeId === "smarket" && i.state === "none");
+  const ref = (p: typeof schema.products.$inferSelect | null | undefined) =>
+    p ? { s_kaupat_product_id: p.source === "mock" ? null : p.externalId, ean: p.ean, name: p.name, source: p.source, pack: p.packSize ? `${p.packSize} ${p.packUnit ?? ""}`.trim() : null } : null;
+  return {
+    version: 1,
+    list: { id: data.list.id, name: data.list.name },
+    store: data.stores.find((s) => s.id === "smarket") ?? null,
+    delivery,
+    generated_at: new Date().toISOString(),
+    items: toBuy
+      .filter((i) => i.productId)
+      .map((i) => ({
+        ingredient: i.nameFi,
+        needed: i.quantity != null ? `${i.quantity} ${i.unit ?? ""}`.trim() : null,
+        quantity: i.packs ?? 1,
+        household: !!i.householdItemId,
+        primary: ref(products.get(i.productId!)),
+        alternate: ref(altOf.get(i.nameFi)),
+      })),
+    unmapped: toBuy.filter((i) => !i.productId).map((i) => ({ ingredient: i.nameFi, needed: i.quantity != null ? `${i.quantity} ${i.unit ?? ""}`.trim() : null })),
+  };
 }

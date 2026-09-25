@@ -4,14 +4,14 @@ import { getDb, schema } from "@/db";
 import { aiAvailable, AiUnavailableError, describeAiError } from "../ai/client";
 import { extractRecipes, type ImageInput, type RecipeSource } from "../ai/extract";
 import { draftFromExtraction } from "../import/claude-map";
-import { fetchPage } from "../import/fetch-page";
+import { fetchImage, fetchPage } from "../import/fetch-page";
 import { extractJsonLdRecipes, pageText, type LdRecipe } from "../import/jsonld";
 import { splitRecipesFromText, type TextRecipe } from "../import/text-heuristic";
 import { detectFileKind, docxToText, pdfToText } from "../import/files";
 import { cleanTags, emptyDraft, recipeDraftSchema, type IngredientDraft, type RecipeDraft } from "../domain/recipe-draft";
 import { parseIngredientLines } from "../domain/ingredient-parser";
 import { getVocab, normalizeMany, rememberSynonyms } from "./vocab";
-import { getOriginals, readOriginal, saveUrlOriginal } from "./originals";
+import { getOriginals, readOriginal, saveUpload, saveUrlOriginal } from "./originals";
 import { saveRecipe } from "./recipes";
 
 type BatchKind = "photo" | "url" | "file" | "manual";
@@ -119,8 +119,16 @@ export async function importFromUrl(rawUrl: string): Promise<string> {
   const original = await saveUrlOriginal(page.finalUrl);
   const lds = extractJsonLdRecipes(page.html, page.finalUrl);
   if (lds.length) {
-    const drafts = await Promise.all(lds.map((ld) => draftFromLd(ld, page.finalUrl, [original.id])));
-    return createBatch("url", [original.id], drafts);
+    const drafts = await Promise.all(
+      lds.map(async (ld) => {
+        // Keep the page's food photo (shown on recipe cards). Optional.
+        const img = ld.imageUrl ? await fetchImage(ld.imageUrl) : null;
+        const photo = img ? await saveUpload(img, "image").catch(() => null) : null;
+        return draftFromLd(ld, page.finalUrl, photo ? [photo.id, original.id] : [original.id]);
+      }),
+    );
+    const ids = [...new Set(drafts.flatMap((d) => d.originalIds))];
+    return createBatch("url", ids, drafts);
   }
   if (!aiAvailable()) {
     throw new Error("No schema.org Recipe data on that page, and Claude is not configured (ANTHROPIC_API_KEY) for the text fallback.");

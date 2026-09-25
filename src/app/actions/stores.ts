@@ -6,7 +6,8 @@ import type { StoreId } from "@/db/schema";
 import { moveSection, removeRule, removeStaple, addStaple, setRule, updateSMarket } from "@/lib/services/settings";
 import { addManualOffer, deleteExpiredOffers, deleteOffer, importOffersFromImages, importOffersFromText, updateOfferName } from "@/lib/services/offers";
 import { deleteSynonym, upsertSynonym } from "@/lib/services/vocab";
-import { clearMapping, createManualProduct, setMapping } from "@/lib/services/products";
+import { clearMapping, createManualProduct, setAlternate, setMapping } from "@/lib/services/products";
+import { setDeliveryPrefs } from "@/lib/services/settings";
 import { describeAiError } from "@/lib/ai/client";
 import { applyMappingToLists } from "@/lib/services/lists";
 import { redirect } from "next/navigation";
@@ -178,4 +179,27 @@ export async function manualProductAction(formData: FormData) {
   revalidatePath("/products");
   const back = safeReturn(str(formData, "return"));
   if (back) redirect(back);
+}
+
+export async function setAlternateAction(formData: FormData) {
+  await requireAuth();
+  await setAlternate(str(formData, "nameFi"), "smarket", str(formData, "productId") || null);
+  revalidatePath("/products");
+  const back = safeReturn(str(formData, "return"));
+  if (back) redirect(back);
+}
+
+export async function deliveryPrefsAction(formData: FormData) {
+  await requireAuth();
+  const w = parseInt(str(formData, "weekday"), 10);
+  const time = (v: string, d: string) => (/^\d{1,2}:\d{2}$/.test(v) ? v.padStart(5, "0") : d);
+  const sub = str(formData, "substitutions");
+  await setDeliveryPrefs({
+    mode: str(formData, "mode") === "pickup" ? "pickup" : "home",
+    weekday: w >= 1 && w <= 7 ? w : 6,
+    windowStart: time(str(formData, "windowStart"), "10:00"),
+    windowEnd: time(str(formData, "windowEnd"), "14:00"),
+    substitutions: sub === "none" || sub === "store" ? sub : "alternate",
+  });
+  revalidatePath("/delivery");
 }

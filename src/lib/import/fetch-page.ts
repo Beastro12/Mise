@@ -84,3 +84,36 @@ export async function fetchPage(input: string): Promise<FetchedPage> {
   }
   throw new Error("Too many redirects.");
 }
+
+const IMAGE_MAX = 6 * 1024 * 1024;
+
+/** Download a recipe photo (same safety rules as pages). Returns null on any problem. */
+export async function fetchImage(input: string): Promise<{ data: Buffer; mime: string; filename: string } | null> {
+  try {
+    let url = new URL(input);
+    let res: Response | null = null;
+    for (let hop = 0; hop < 4; hop++) {
+      await assertPublicUrl(url); // re-checked on every redirect hop
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+      res = await fetch(url, { signal: ctrl.signal, redirect: "manual", headers: { accept: "image/webp,image/jpeg,image/png,image/*" } });
+      clearTimeout(timer);
+      const loc = res.headers.get("location");
+      if (res.status >= 300 && res.status < 400 && loc) {
+        url = new URL(loc, url);
+        res = null;
+        continue;
+      }
+      break;
+    }
+    if (!res) return null;
+    const mime = (res.headers.get("content-type") ?? "").split(";")[0].trim();
+    if (!res.ok || !/^image\/(jpeg|png|webp|gif)$/.test(mime)) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.byteLength > IMAGE_MAX || buf.byteLength < 200) return null;
+    const ext = mime.split("/")[1].replace("jpeg", "jpg");
+    return { data: buf, mime, filename: `recipe-photo.${ext}` };
+  } catch {
+    return null;
+  }
+}

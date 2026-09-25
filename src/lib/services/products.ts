@@ -193,3 +193,18 @@ export async function refreshMappedProducts(productIds: string[]) {
     }
   }
 }
+
+/** Second choice for an ingredient (used by the cart helper when the first is sold out). */
+export async function setAlternate(nameFi: string, storeId: StoreId, productId: string | null) {
+  const db = await getDb();
+  await db
+    .update(schema.ingredientProductMap)
+    .set({ alternateProductId: productId, updatedAt: new Date() })
+    .where(and(eq(schema.ingredientProductMap.nameFi, nameFi), eq(schema.ingredientProductMap.storeId, storeId)));
+}
+
+export async function getProductById(id: string): Promise<ProductRow | null> {
+  const db = await getDb();
+  const [row] = await db.select().from(schema.products).where(eq(schema.products.id, id));
+  return row ?? null;
+}

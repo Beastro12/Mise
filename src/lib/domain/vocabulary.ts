@@ -45,6 +45,14 @@ export const SEED_SYNONYMS: Row[] = [
   ["herkkusieni", HV, "mushroom", "mushrooms", "herkkusieniä", "sieni", "sieniä", "champignon"],
   ["lanttu", HV, "swede", "rutabaga", "lanttua"],
   ["palsternakka", HV, "parsnip", "parsnips", "palsternakkaa"],
+  ["kantarelli", HV, "chanterelle", "chanterelles", "kantarelleja", "keltavahvero", "keltavahveroita"],
+  ["suppilovahvero", HV, "funnel chanterelle", "winter chanterelle", "suppilovahveroita", "suppis"],
+  ["varhaisperuna", HV, "new potatoes", "varhaisperunoita", "uusi peruna", "uusia perunoita"],
+  ["raparperi", HV, "rhubarb", "raparperia"],
+  ["puolukka", HV, "lingonberry", "lingonberries", "puolukoita", "puolukkaa"],
+  ["mustikka", HV, "blueberry", "blueberries", "bilberries", "mustikoita", "mustikkaa"],
+  ["karpalo", HV, "cranberry", "cranberries", "karpaloita"],
+  ["mansikka", HV, "strawberry", "strawberries", "mansikoita", "mansikkaa"],
   ["punajuuri", HV, "beetroot", "beet", "beets", "punajuurta", "punajuuria"],
   ["varsiselleri", HV, "celery", "varsisellerin varsi", "varsisellerin vartta", "varsiselleriä"],
   ["kaali", HV, "cabbage", "valkokaali", "valkokaalia", "kaalia"],
@@ -141,6 +149,16 @@ export const SEED_SYNONYMS: Row[] = [
   // Drinks
   ["valkoviini", J, "white wine", "dry white wine", "valkoviiniä", "kuiva valkoviini", "kuivaa valkoviiniä"],
   ["punaviini", J, "red wine", "punaviiniä"],
+
+  // Household (not food; section "muut")
+  ["wc-paperi", "muut", "toilet paper", "vessapaperi", "wc-paperia", "vessapaperia"],
+  ["talouspaperi", "muut", "paper towels", "kitchen roll", "talouspaperia"],
+  ["astianpesuaine", "muut", "dish soap", "washing-up liquid", "astianpesuainetta"],
+  ["konetiskiaine", "muut", "dishwasher tablets", "konetiskitabletit", "astianpesukonetabletit"],
+  ["pyykinpesuaine", "muut", "laundry detergent", "pyykinpesuainetta"],
+  ["roskapussi", "muut", "bin bags", "trash bags", "roskapusseja", "jätesäkki"],
+  ["kahvi", J, "coffee", "kahvia", "suodatinkahvi"],
+  ["tee", J, "tea", "teetä"],
 
   // Never bought
   ["vesi", "muut", "water", "vettä", "kylmää vettä", "kiehuvaa vettä", "lämmintä vettä", "cold water", "hot water", "boiling water"],

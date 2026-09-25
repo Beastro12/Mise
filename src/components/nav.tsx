@@ -19,7 +19,7 @@ export function BottomNav() {
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
       <ul className="mx-auto flex max-w-xl">
         {TABS.map((t) => {
-          const active = path === t.href || path.startsWith(`${t.href}/`) || (t.href === "/more" && /^\/(stores|settings|history|products)/.test(path));
+          const active = path === t.href || path.startsWith(`${t.href}/`) || (t.href === "/more" && /^\/(stores|settings|history|products|household|delivery)/.test(path));
           return (
             <li key={t.href} className="flex-1">
               <Link

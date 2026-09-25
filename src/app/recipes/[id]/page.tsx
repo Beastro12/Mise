@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { getRecipe } from "@/lib/services/recipes";
 import { accentFor, foodColor, plateFor } from "@/lib/domain/food-colors";
 import { Plate } from "@/components/plate";
+import { photoId } from "@/components/recipe-visual";
+import { TraitBadges } from "@/components/trait-badges";
+import { recipeTraits } from "@/lib/domain/traits";
 import { deleteRecipeAction } from "@/app/actions/recipes";
 import { scaleQuantity } from "@/lib/domain/scaling";
 import { formatQty } from "@/lib/domain/units";
@@ -24,7 +27,12 @@ export default async function RecipePage(props: PageProps<"/recipes/[id]">) {
         className="-mx-5 -mt-4 mb-5 flex justify-center pt-6 pb-8"
         style={{ background: `radial-gradient(ellipse at 50% 70%, ${accentFor(r.ingredients)}66, ${accentFor(r.ingredients)}14 70%, transparent)` }}
       >
-        <Plate spec={plateFor(r.ingredients)} seed={r.id} size={176} />
+        {photoId(r) ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`/api/originals/${photoId(r)}`} alt="" className="mx-5 h-52 w-full max-w-md rounded-3xl object-cover shadow-[0_16px_30px_-18px_rgba(0,0,0,.5)]" data-testid="recipe-photo" />
+        ) : (
+          <Plate spec={plateFor(r.ingredients)} seed={r.id} size={176} />
+        )}
       </div>
       <PageTitle
         sub={
@@ -38,6 +46,7 @@ export default async function RecipePage(props: PageProps<"/recipes/[id]">) {
       >
         {r.title}
       </PageTitle>
+      <TraitBadges className="mb-3" traits={recipeTraits(r)} />
       <div className="flex flex-wrap gap-1">
         {r.tags.map((t) => (
           <Badge key={t}>{t}</Badge>
