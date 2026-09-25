@@ -5,7 +5,7 @@ import { cx } from "./ui";
 
 const PROTEIN_TONE: Record<Protein, string> = {
   meat: "bg-lingon-soft text-lingon",
-  chicken: "bg-chanterelle-soft text-chanterelle-ink",
+  chicken: "bg-chanterelle-soft text-chanterelle-deep",
   fish: "bg-lidl-soft text-lidl",
   vegetarian: "bg-smarket-soft text-smarket",
   vegan: "bg-accent-soft text-primary",

@@ -279,7 +279,7 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
 
       {ask.length ? (
         <div className="mb-8 rounded-3xl bg-chanterelle-soft p-4" data-testid="have-it">
-          <div className="mb-3 font-display text-lg font-[680] text-chanterelle-ink">Have it at home?</div>
+          <div className="mb-3 font-display text-lg font-[680] text-chanterelle-deep">Have it at home?</div>
           <ul className="space-y-2">
             {ask.map((i) => (
               <li key={i.id} className="flex items-center justify-between gap-2">
@@ -328,7 +328,7 @@ export function Checklist({ initial, mode, token }: { initial: ClientList; mode:
 
       {groups.map((g) => (
         <section key={g.storeId} className="mb-10" data-testid={`store-${g.storeId}`}>
-          <h2 className={cx("mb-3 flex items-center justify-between rounded-2xl px-4 py-3 font-display text-[19px] font-[680] tracking-[-0.01em]", g.storeId === "lidl" ? "bg-lidl text-white" : "bg-primary text-primary-ink")}>
+          <h2 className={cx("mb-3 flex items-center justify-between rounded-2xl px-4 py-3 font-display text-[19px] font-[680] tracking-[-0.01em]", g.storeId === "lidl" ? "bg-lidl text-lidl-ink" : "bg-primary text-primary-ink")}>
             <span className="flex items-center gap-2">
               <span className={cx("h-2.5 w-2.5 rounded-full", g.storeId === "lidl" ? "bg-[#f2c94c]" : "bg-chanterelle")} aria-hidden />
               {storeName(g.storeId)}

@@ -14,9 +14,7 @@
 //
 // It only talks to your own Aitta (with the helper key from More → S-kaupat
 // order) and never stores your S-kaupat password.
-import readline from "node:readline/promises";
-import { stdin, stdout } from "node:process";
-import { openBrowser, readConfig, writeConfig } from "./lib/local.mjs";
+import { openBrowser, prompter, readConfig, writeConfig } from "./lib/local.mjs";
 import { parseProductPage } from "./lib/product.mjs";
 import { SITE } from "./lib/site-skaupat.mjs";
 
@@ -27,8 +25,7 @@ const opt = (n) => {
   return i >= 0 ? args[i + 1] : null;
 };
 
-const rl = readline.createInterface({ input: stdin, output: stdout });
-const ask = (q) => rl.question(`\n👉 ${q} `);
+const { ask, close } = await prompter();
 const log = (...m) => console.log(...m);
 
 async function setup(current) {
@@ -127,4 +124,4 @@ main()
     console.error(`\n❌ ${e.message}`);
     process.exitCode = 1;
   })
-  .finally(() => rl.close());
+  .finally(() => close());

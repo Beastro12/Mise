@@ -37,3 +37,20 @@ export async function openBrowser({ useChrome = true } = {}) {
   const page = ctx.pages()[0] ?? (await ctx.newPage());
   return { ctx, page };
 }
+
+/**
+ * Terminal prompts. If input ends (Ctrl-D, or a pipe runs dry) a pending
+ * question fails with a clear message instead of the script exiting silently.
+ */
+export async function prompter() {
+  const readline = await import("node:readline/promises");
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  let closed = false;
+  const onClose = new Promise((_, reject) => rl.once("close", () => ((closed = true), reject(new Error("Input ended; stopped without finishing.")))));
+  onClose.catch(() => {});
+  const ask = (q) => {
+    if (closed) return Promise.reject(new Error("Input ended; stopped without finishing."));
+    return Promise.race([rl.question(`\n👉 ${q} `), onClose]);
+  };
+  return { ask, close: () => rl.close() };
+}

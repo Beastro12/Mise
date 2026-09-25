@@ -15,7 +15,8 @@ Automating a logged-in account may be restricted by S-kaupat's terms of use. Che
 
 1. Install **Node.js 22** (<https://nodejs.org>) and **Google Chrome**.
 2. `git clone` this repository, `cd` into it, run `npm install`.
-3. Optional, if you don't want to use your installed Chrome: `npx playwright install chromium` and add `--no-chrome` when running.
+3. Finder shortcut, if you'd rather not type commands: in the repo's `helper` folder, double-click **Aitta Match.command** or **Aitta Cart.command** (the cart one asks you to paste the share link). The first time, macOS may block it: right-click → Open → Open.
+4. Optional, if you don't want to use your installed Chrome: `npx playwright install chromium` and add `--no-chrome` when running.
 
 ## Matching real products (first weeks, then only for new ingredients)
 

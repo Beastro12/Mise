@@ -12,9 +12,7 @@
 //
 // It never stores your password and never presses "order" or "pay".
 // Options: --dry-run (only print the plan)  --no-chrome (use Playwright's Chromium)
-import readline from "node:readline/promises";
-import { stdin, stdout } from "node:process";
-import { openBrowser } from "./lib/local.mjs";
+import { openBrowser, prompter } from "./lib/local.mjs";
 import { chooseSlot, planCart } from "./lib/plan.mjs";
 import { SITE, addProduct, chooseMode, listSlots, openCheckout, safeClick } from "./lib/site-skaupat.mjs";
 
@@ -24,8 +22,7 @@ const dryRun = args.includes("--dry-run");
 const useChrome = !args.includes("--no-chrome");
 const WD = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const rl = readline.createInterface({ input: stdin, output: stdout });
-const ask = (q) => rl.question(`\n👉 ${q} `);
+const { ask, close } = await prompter();
 const log = (...m) => console.log(...m);
 
 function orderUrl(share) {
@@ -123,4 +120,4 @@ main()
     console.error(`\n❌ ${e.message}`);
     process.exitCode = 1;
   })
-  .finally(() => rl.close());
+  .finally(() => close());
