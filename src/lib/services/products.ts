@@ -109,13 +109,15 @@ export async function createManualProduct(input: {
   price?: number | null;
   unitPrice?: number | null;
   unitPriceUnit?: string | null;
+  /** "s-kaupat" when captured from the real site by the Mac helper. */
+  source?: "manual" | "s-kaupat";
 }): Promise<ProductRow> {
   const db = await getDb();
   const [store] = await db.select().from(schema.stores).where(eq(schema.stores.id, "smarket"));
   const [row] = await upsertProducts([
     {
       storeId: "smarket",
-      source: "manual",
+      source: input.source ?? "manual",
       externalId: input.externalId?.trim() || `manual-${randomUUID()}`,
       ean: input.ean?.trim() || null,
       name: input.name.trim(),

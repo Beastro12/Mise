@@ -12,10 +12,9 @@
 //
 // It never stores your password and never presses "order" or "pay".
 // Options: --dry-run (only print the plan)  --no-chrome (use Playwright's Chromium)
-import os from "node:os";
-import path from "node:path";
 import readline from "node:readline/promises";
 import { stdin, stdout } from "node:process";
+import { openBrowser } from "./lib/local.mjs";
 import { chooseSlot, planCart } from "./lib/plan.mjs";
 import { SITE, addProduct, chooseMode, listSlots, openCheckout, safeClick } from "./lib/site-skaupat.mjs";
 
@@ -56,14 +55,7 @@ async function main() {
   log(`\n🚚 ${d.mode === "pickup" ? "Pickup" : "Home delivery"}, preferred ${WD[d.weekday]} ${d.windowStart}–${d.windowEnd}`);
   if (dryRun) return;
 
-  const { chromium } = await import("@playwright/test");
-  const profile = path.join(os.homedir(), ".aitta", "skaupat-profile");
-  const ctx = await chromium.launchPersistentContext(profile, {
-    headless: false,
-    viewport: null,
-    ...(useChrome ? { channel: "chrome" } : {}),
-  });
-  const page = ctx.pages()[0] ?? (await ctx.newPage());
+  const { ctx, page } = await openBrowser({ useChrome });
   await page.goto(SITE.home);
   await ask("Log in to S-kaupat in the browser window and make sure your store is selected. Press Enter when ready.");
 

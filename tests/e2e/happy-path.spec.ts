@@ -154,6 +154,37 @@ test("import → plan → list → split → check off → pantry", async ({ pag
   expect(dry).toContain("kerma: only MOCK products matched");
   expect(dry).toContain("Home delivery, preferred Sat 10:00–14:00");
 
+  // 8c. Product matching from the Mac: create a helper key in the app, list what needs a product, save a real one.
+  await page.goto("/delivery");
+  await page.click('[data-testid="create-helper-key"]');
+  const helperKey = (await page.locator('[data-testid="helper-key-value"]').innerText()).trim();
+  expect(helperKey).toMatch(/^aitta_/);
+  const matchDry = execFileSync("node", ["helper/skaupat-match.mjs", "--dry-run", "--list", listUrl.split("/").pop()!], {
+    encoding: "utf8",
+    env: { ...process.env, AITTA_URL: origin, AITTA_HELPER_KEY: helperKey, AITTA_HOME: "test-results/aitta-home" },
+  });
+  expect(matchDry).toMatch(/• kerma\n/); // only a MOCK product so far
+  expect(matchDry).toMatch(/• peruna\n/);
+  const post = (key: string) =>
+    fetch(`${origin}/api/helper/products`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        nameFi: "kerma",
+        rank: 1,
+        product: { externalId: "6400000000009", ean: "6400000000009", name: "Testikerma 2 dl", packSize: 2, packUnit: "dl", price: 1.19 },
+      }),
+    });
+  expect((await post("aitta_wrong")).status).toBe(401);
+  expect((await post(helperKey)).status).toBe(200);
+  const exported2 = await page.evaluate(async (url) => (await fetch(`/api/lists/${url.split("/").pop()}/export`)).json(), listUrl);
+  expect(exported2.items.find((i: { ingredient: string }) => i.ingredient === "kerma")).toMatchObject({
+    s_kaupat_product_id: "6400000000009",
+    ean: "6400000000009",
+    product_source: "s-kaupat",
+  });
+  await page.goto(listUrl);
+
   // 9. Checked items → pantry in one tap.
   await page.click('[data-testid="to-pantry"]');
   await expect(page.locator('[data-testid="list-message"]')).toContainText("Moved 4 item(s)");

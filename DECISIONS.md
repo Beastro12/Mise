@@ -121,6 +121,7 @@ The brief left `S_MARKET_STORE = <FILL IN>`. The app seeds "S-market (set your s
 | Supabase Postgres | **VERIFIED equivalent** | full e2e suite passed against a local Postgres 16 with the same driver settings |
 | Supabase Storage | **UNVERIFIED live** | follows supabase-js docs; local storage path tested |
 | S-kaupat cart helper (site steps) | **UNVERIFIED** | s-kaupat.fi blocked; guessed URLs/texts with pause-and-ask fallback; plan/slot/guard logic unit-tested; `--dry-run` against the real order feed in e2e |
+| S-kaupat product matching (`npm run match`) | **UNVERIFIED page parsing** | JSON-LD parser unit-tested on schema.org shapes; helper key + write-back API + `--dry-run` covered in e2e; real product pages not seen |
 
 ### D30. Name and visual identity: Aitta, "birch & frost"
 Renamed from "Mise FI" (the name belongs to an existing UK app) to **Aitta**, the Finnish word for a traditional food storehouse, chosen by you from a shortlist. **Not trademark- or domain-checked** (not possible from the build environment). Visuals: birch-paper background (#F4F2EE), charcoal ink (#22262A), one fjord-blue accent (#3E6A86), moss for S-market, lake blue for Lidl, hairline borders, squarer corners, Inter variable font bundled from npm (no Google Fonts request at runtime). Dark mode "frost night" follows the system setting. The icon is a line drawing of an aitta on stilts. Renamed internals too: cookie `aitta_session` (existing logins must sign in again), localStorage keys `aitta:*`, service-worker cache `aitta-v1`, default bucket `aitta-originals`.
@@ -154,3 +155,9 @@ Chosen in the interview: a helper on your Mac (not the cloud), home delivery, pr
 - **Recipe photos:** the schema.org `image` from web imports is downloaded (same private-address guard, re-checked on each redirect, ≤ 6 MB) and shown instead of the plate. Cookbook-page scans are not used as photos.
 - **Week strip:** Mon–Sun plates at the top of the plan.
 - **Cost estimate:** sum of known item prices × packs on the list, with a count of unpriced items. With the mock/none S-kaupat adapter this is only as good as the prices you enter.
+
+### D37. Real products via the Mac helper (`npm run match`), UNVERIFIED page parsing
+S-kaupat's product data still can't be read from a server (D1), and no endpoint is invented. Instead you open the product in S-kaupat yourself on the Mac, and the helper reads that page and saves it in Aitta.
+- **How it reads a page:** schema.org Product JSON-LD (`gtin13`/`gtin`/`sku`, `offers.price`, `brand`), then `og:title` and an EAN in the URL. Pack size comes from the product name ("2 dl", "6 x 330 ml", "8 rl" → 8 kpl). Whether s-kaupat.fi publishes JSON-LD is **unverified**. If not, the helper says it couldn't read the page and skips it; nothing is guessed.
+- **Write-back:** `GET /api/helper/unmatched` and `POST /api/helper/products`, authorised by a **helper key** (Bearer), not the passcode. The key is created on More → S-kaupat order, shown once, stored only as a SHA-256 hash, and replaced or revoked there. It can only list unmatched S-market items and save products (source `s-kaupat`, 1st choice → mapping and open lists, 2nd choice → alternate).
+- **On the Mac:** the app address and key live in `~/.aitta/config.json` (mode 600), or in `AITTA_URL`/`AITTA_HELPER_KEY`. The S-kaupat login stays in the browser profile; no password is stored anywhere.

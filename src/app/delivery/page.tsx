@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import { getDeliveryPrefs } from "@/lib/services/settings";
 import { listLists } from "@/lib/services/lists";
 import { deliveryPrefsAction } from "@/app/actions/stores";
+import { helperKeyInfo } from "@/lib/helper-auth";
+import { HelperKey } from "@/components/helper-key";
 import { Button, Card, Field, Notice, PageTitle, Section, inputCls } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +11,7 @@ export const dynamic = "force-dynamic";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export default async function DeliveryPage() {
-  const [prefs, lists] = await Promise.all([getDeliveryPrefs(), listLists()]);
+  const [prefs, lists, keyInfo] = await Promise.all([getDeliveryPrefs(), listLists(), helperKeyInfo()]);
   const h = await headers();
   const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
   const latest = lists[0];
@@ -56,10 +58,21 @@ export default async function DeliveryPage() {
         </form>
       </Card>
 
+      <Section title="Pick real S-kaupat products">
+        <p className="mb-3 text-sm leading-relaxed">
+          The cart helper adds products by EAN, so each S-market ingredient needs a real S-kaupat product. On your Mac,{" "}
+          <code className="rounded bg-surface-2 px-1">npm run match</code> opens S-kaupat, searches each ingredient on your latest list, and saves the product
+          you open (plus an optional 2nd choice) here. The first run asks for this app&apos;s address and a helper key:
+        </p>
+        <Card>
+          <HelperKey createdAt={keyInfo?.createdAt ?? null} />
+        </Card>
+      </Section>
+
       <Section title="Run it on your Mac">
         <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed">
           <li>Once: install Node.js 22 and Google Chrome, clone this repo, and run <code className="rounded bg-surface-2 px-1">npm install</code>.</li>
-          <li>Plan the week and generate the shopping list. Match S-market products (and 2nd choices) for the ingredients.</li>
+          <li>Plan the week and generate the shopping list. Then pick real products with <code className="rounded bg-surface-2 px-1">npm run match</code> (above).</li>
           <li>
             In the repo folder run:
             {command ? (
