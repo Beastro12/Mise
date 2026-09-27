@@ -2,7 +2,7 @@
 
 *Aitta* is the old Finnish storehouse on stilts where a household kept its food.
 
-A personal meal planner and shopping list for one household in Turku. It plans the week from your own recipes and splits the shopping list between **S-market** (S-kaupat) and **Lidl Vähäheikkilä**. The UI is in English; ingredient names are Finnish, because that's how you search in the store.
+A personal meal planner and shopping list for one household in Turku. It plans the week from your own recipes and splits the shopping list between **S-market Majakkaranta** (S-kaupat) and **Lidl Vähäheikkilä**. The UI is in English; ingredient names are Finnish, because that's how you search in the store.
 
 - **Recipes:** import from a web link (schema.org JSON-LD, with Claude as fallback), photos or scans (Claude vision; many pages → one recipe, or one page → many recipes), files (PDF, .docx, .txt, .md), or type them in. Every import ends in a review screen, and the original stays linked to the recipe.
 - **Plan:** pick recipes yourself, or have a week proposed (no repeats from the last 2 weeks, protein variety, pantry items, this week's Lidl offers). You can swap one meal, lock meals and regenerate the rest, and mark meals cooked.
@@ -13,6 +13,8 @@ A personal meal planner and shopping list for one household in Turku. It plans t
 - **Stores:** Lidl offers come from leaflet photos or pasted text. S-kaupat product data is a **mock** until the real site can be verified (see [DECISIONS.md](DECISIONS.md)).
 
 Design: the Finnish autumn kitchen: spruce, birch, chanterelle, lingonberry and blueberry colours; every recipe drawn as a plate from its real ingredient colours; Bricolage Grotesque headings + Inter body (both bundled); a forest-night dark theme follows the phone setting (DECISIONS D32). The GitHub repo is still called `Mise`; the app itself is Aitta.
+
+**Setting it up for real: [SETUP.md](SETUP.md)** (one checklist).
 
 Docs: [PLAN.md](PLAN.md) (architecture, data model) · [DECISIONS.md](DECISIONS.md) (choices, and which data sources are verified or mocked) · [NEXT_SESSION.md](NEXT_SESSION.md) (cart-automation hand-off).
 
@@ -42,7 +44,7 @@ To try it on your phone over wifi: `DEV_ORIGINS=192.168.x.y npm run dev -- -H 0.
 | `DB_AUTO_MIGRATE` | no | `1` runs migrations and seed on first connection. |
 | `BLOB_STORE` | **`supabase` on Vercel** | `local` (`./.data/uploads`) or `supabase`. |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET` | with `BLOB_STORE=supabase` | Private bucket for recipe photos and files (default name `aitta-originals`). |
-| `S_MARKET_STORE`, `S_KAUPAT_STORE_ID` | no | Your S-market or Prisma. Seeded once; editable later under More → Stores. |
+| `S_MARKET_STORE`, `S_KAUPAT_STORE_ID` | no | Your S-market or Prisma (default: S-market Majakkaranta). Seeded once; editable later under More → Stores. |
 | `PGLITE_DIR`, `UPLOADS_DIR` | no | Local only: where the embedded database and uploaded files are kept (default `./.data/pglite`, `./.data/uploads`). |
 | `S_KAUPAT_ADAPTER` | no | `mock` (invented demo catalogue) or `none`. Default: `mock` in dev, `none` in production. |
 
@@ -66,7 +68,7 @@ The e2e suite imports a recipe from a URL (served by a local fixture server), pl
 2. **Create the tables and seed data** from your machine:
    ```bash
    DATABASE_URL='postgres://…:6543/postgres' npm run db:migrate
-   DATABASE_URL='postgres://…:6543/postgres' S_MARKET_STORE='S-market …, Turku' npm run db:seed
+   DATABASE_URL='postgres://…:6543/postgres' npm run db:seed
    ```
 3. **Vercel:** import the Git repo (framework: Next.js, default build command). Set the environment variables: `APP_PASSCODE`, `SESSION_SECRET`, `ANTHROPIC_API_KEY`, `DATABASE_URL`, `BLOB_STORE=supabase`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET=aitta-originals`. Deploy.
 4. Open the site on your phone, log in, then **Add to Home Screen**. Open the shopping list once while online so it also works offline in the store.

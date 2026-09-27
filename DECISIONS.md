@@ -107,7 +107,7 @@ Playwright is pinned to 1.56.1 to match the Chromium preinstalled in the build c
 Next 16 blocks dev resources for origins other than localhost. `127.0.0.1` is allowed, and more hosts can be added with `DEV_ORIGINS` (e.g. to test on the phone over wifi).
 
 ### D29. S-market store placeholder
-The brief left `S_MARKET_STORE = <FILL IN>`. The app seeds "S-market (set your store in Settings)", unless `S_MARKET_STORE` is set at seed time, and the name and S-kaupat store id are editable under More → Stores. Nothing else depends on the name until a verified S-kaupat adapter exists.
+The brief left `S_MARKET_STORE = <FILL IN>`; the owner later named **S-market Majakkaranta**, which is now the seeded default, unless `S_MARKET_STORE` is set at seed time, and the name and S-kaupat store id are editable under More → Stores. Nothing else depends on the name until a verified S-kaupat adapter exists.
 
 ## Verification status (summary)
 
