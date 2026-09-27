@@ -14,6 +14,8 @@ A personal meal planner and shopping list for one household in Turku. It plans t
 
 Design: the Finnish autumn kitchen: spruce, birch, chanterelle, lingonberry and blueberry colours; every recipe drawn as a plate from its real ingredient colours; Bricolage Grotesque headings + Inter body (both bundled); a forest-night dark theme follows the phone setting (DECISIONS D32). The GitHub repo is still called `Mise`; the app itself is Aitta.
 
+**Setting it up for real: [SETUP.md](SETUP.md)** (one checklist).
+
 Docs: [PLAN.md](PLAN.md) (architecture, data model) · [DECISIONS.md](DECISIONS.md) (choices, and which data sources are verified or mocked) · [NEXT_SESSION.md](NEXT_SESSION.md) (cart-automation hand-off).
 
 ## Run locally
