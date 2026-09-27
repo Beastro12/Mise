@@ -9,7 +9,7 @@ import { draftsFromLines } from "../lib/domain/recipe-draft";
 
 type AnyDb = PgDatabase<PgQueryResultHKT, typeof schema>;
 
-export const DEFAULT_SMARKET_NAME = "S-market (set your store in Settings)";
+export const DEFAULT_SMARKET_NAME = "S-market Majakkaranta";
 
 /**
  * Idempotent: seeds reference data only when the stores table is empty,
