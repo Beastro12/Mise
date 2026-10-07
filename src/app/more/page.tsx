@@ -8,6 +8,7 @@ import { Badge, PageTitle, Section } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 const LINKS = [
+  { href: "/food/setup", title: "Calorie setup", sub: "Profile, deficit goal, Apple Health & Oura import" },
   { href: "/household", title: "Refills", sub: "Toilet paper, coffee, dish soap: suggested when due" },
   { href: "/delivery", title: "S-kaupat order helper", sub: "Delivery preferences and how to fill your cart" },
   { href: "/stores", title: "Stores & section order", sub: "S-market store, walking order per store" },
@@ -53,6 +54,10 @@ export default function MorePage() {
           <div className="flex justify-between gap-2">
             <dt>Lidl offers</dt>
             <dd className="text-right text-xs text-muted">From your leaflet imports (lidl.fi not verified)</dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt>Oura sync</dt>
+            <dd>{config.ouraToken ? <Badge tone="warn">token set (UNVERIFIED)</Badge> : <span className="text-xs text-muted">off (file import only)</span>}</dd>
           </div>
           <div className="flex justify-between gap-2">
             <dt>Passcode</dt>

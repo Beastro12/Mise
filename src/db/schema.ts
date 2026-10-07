@@ -365,6 +365,47 @@ export const shoppingItems = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// Calories: food log and daily energy from Apple Health / Oura
+// ---------------------------------------------------------------------------
+
+export type MealSlot = "breakfast" | "lunch" | "dinner" | "snack";
+
+export const foodEntries = pgTable(
+  "food_entries",
+  {
+    id: id(),
+    day: date("day").notNull(),
+    meal: text("meal").$type<MealSlot>().notNull(),
+    name: text("name").notNull(),
+    /** Free text such as "150 g" or "2 slices"; scaled when the plan shrinks a portion. */
+    portion: text("portion"),
+    kcal: integer("kcal").notNull(),
+    proteinG: doublePrecision("protein_g"),
+    recipeId: uuid("recipe_id").references(() => recipes.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("food_entries_day_idx").on(t.day)],
+);
+
+/** One row per day and source. Sources are never added together (they overlap). */
+export const healthDays = pgTable(
+  "health_days",
+  {
+    day: date("day").notNull(),
+    source: text("source").$type<"apple" | "oura">().notNull(),
+    activeKcal: integer("active_kcal"),
+    basalKcal: integer("basal_kcal"),
+    totalKcal: integer("total_kcal"),
+    steps: integer("steps"),
+    weightKg: doublePrecision("weight_kg"),
+    /** Dietary energy logged in Apple Health by other apps (shown, not used as the log). */
+    intakeKcal: integer("intake_kcal"),
+    importedAt: timestamp("imported_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.source] })],
+);
+
+// ---------------------------------------------------------------------------
 // Settings (single row key/value)
 // ---------------------------------------------------------------------------
 

@@ -15,6 +15,13 @@
       "when": 1790338143436,
       "tag": "0001_household_alternates",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791398623548,
+      "tag": "0002_nutrition",
+      "breakpoints": true
     }
   ]
 }
