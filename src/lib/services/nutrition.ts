@@ -138,8 +138,14 @@ export async function syncOura(days = 30): Promise<number> {
   const end = todayHelsinki();
   const start = addDays(end, -days);
   const url = `https://api.ouraring.com/v2/usercollection/daily_activity?start_date=${start}&end_date=${addDays(end, 1)}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(15_000) });
-  if (res.status === 401 || res.status === 403) throw new Error("Oura refused the token. Check OURA_ACCESS_TOKEN, or import an Oura export file instead.");
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(15_000) });
+  } catch {
+    throw new Error("Could not reach Oura (network error or timeout). Check the connection and try again.");
+  }
+  if (res.status === 401 || res.status === 403) throw new Error("Oura rejected the token (personal access tokens may be retired). Use the file import instead.");
+  if (res.status === 429) throw new Error("Oura rate limit reached; try again in a few minutes.");
   if (!res.ok) throw new Error(`Oura API error ${res.status}.`);
   return saveHealthDays("oura", parseOura(await res.text()));
 }

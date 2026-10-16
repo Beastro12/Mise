@@ -1,8 +1,11 @@
 import zlib from "node:zlib";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AppleHealthParser, parseAppleHealthStream } from "@/lib/health/apple";
-import { parseOura } from "@/lib/health/oura";
+import { AppleHealthParser, appleEmptyMessage, parseAppleHealthStream } from "@/lib/health/apple";
+import { ouraEmptyMessage, parseOura, parseOuraDetailed } from "@/lib/health/oura";
+import { syncOura } from "@/lib/services/nutrition";
 import { decodeTextStream, zipEntryText } from "@/lib/health/zip";
+
+vi.mock("@/db", () => ({ getDb: vi.fn(), schema: {} }));
 
 const rec = (type: string, value: number | string, start: string, extra = 'sourceName="Apple Watch" unit="kcal"', selfClose = true) =>
   `<Record type="HKQuantityTypeIdentifier${type}" ${extra} creationDate="${start}" startDate="${start}" endDate="${start}" value="${value}"${selfClose ? "/>" : `>\n  <MetadataEntry key="HKWasUserEntered" value="1"/>\n </Record>`}`;
@@ -202,5 +205,70 @@ describe("export.zip", () => {
         expect(err.message).toMatch(/export\.xml/);
       }
     });
+  });
+});
+
+describe("Oura formats and diagnostics", () => {
+  const row = (day: string, total: number) => ({ day, totalKcal: total, activeKcal: null, basalKcal: null, steps: null, weightKg: null, intakeKcal: null });
+
+  it("reads legacy activity, v2 CSV, semicolon+BOM+quoted headers, ISO days", () => {
+    expect(parseOura(JSON.stringify({ activity: [{ summary_date: "2026-09-28", cal_total: 2400, cal_active: 400, steps: 8000 }] }))).toEqual([
+      { day: "2026-09-28", totalKcal: 2400, activeKcal: 400, basalKcal: null, steps: 8000, weightKg: null, intakeKcal: null },
+    ]);
+    expect(parseOura("day,total_calories\n2026-09-28,2500")).toEqual([row("2026-09-28", 2500)]);
+    expect(parseOura('\uFEFF"day";"total_calories"\n2026-09-28;2500')).toEqual([row("2026-09-28", 2500)]);
+    expect(parseOura("day,total_calories\n2026-09-28T00:00:00+03:00,2500")).toEqual([row("2026-09-28", 2500)]);
+    expect(parseOura(JSON.stringify({ data: [{ day: "2026-09-28", total_calories: 2500 }] }))).toEqual([row("2026-09-28", 2500)]);
+  });
+
+  it("picks the array that has energy columns", () => {
+    const a = { sleep: [{ day: "2026-09-28", score: 80 }], daily_activity: [{ day: "2026-09-28", total_calories: 2500 }] };
+    expect(parseOura(JSON.stringify(a))).toEqual([row("2026-09-28", 2500)]);
+    const b = { sleep: [{ day: "2026-09-28", score: 80 }], activity: [{ summary_date: "2026-09-28", cal_total: 2500 }] };
+    expect(parseOura(JSON.stringify(b))).toEqual([row("2026-09-28", 2500)]);
+  });
+
+  it("explains an empty result", () => {
+    const d = parseOuraDetailed("foo,bar\n1,2\n3,4");
+    expect(d.days).toEqual([]);
+    expect(d.columns).toEqual(["foo", "bar"]);
+    expect(d.rows).toBe(2);
+    expect(ouraEmptyMessage(d)).toBe("No daily energy found. Columns seen: foo, bar (2 rows)");
+    const many = ouraEmptyMessage({ columns: "abcdefghij".split(""), rows: 1 });
+    expect(many).toContain("a, b, c, d, e, f, g, h…");
+    expect(many).not.toContain(", i");
+  });
+
+  it("explains an Apple file with only unknown types", () => {
+    const p = new AppleHealthParser();
+    p.push(`<HealthData>${rec("HeartRate", 61, "2026-09-28 20:00:00 +0300")}${rec("HeartRate", 62, "2026-09-28 21:00:00 +0300")}</HealthData>`);
+    expect(p.result()).toEqual([]);
+    expect(appleEmptyMessage(p)).toBe("Read 2 records; types seen: HKQuantityTypeIdentifierHeartRate (2)");
+  });
+});
+
+describe("syncOura errors", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+  const withFetch = (f: unknown) => {
+    vi.stubEnv("OURA_ACCESS_TOKEN", "x");
+    vi.stubGlobal("fetch", f);
+  };
+
+  it("401 points to the file import", async () => {
+    withFetch(vi.fn().mockResolvedValue(new Response("", { status: 401 })));
+    await expect(syncOura()).rejects.toThrow("Oura rejected the token (personal access tokens may be retired). Use the file import instead.");
+  });
+
+  it("429 says rate limit", async () => {
+    withFetch(vi.fn().mockResolvedValue(new Response("", { status: 429 })));
+    await expect(syncOura()).rejects.toThrow("Oura rate limit reached; try again in a few minutes.");
+  });
+
+  it("network failure gets a network message", async () => {
+    withFetch(vi.fn().mockRejectedValue(new TypeError("fetch failed")));
+    await expect(syncOura()).rejects.toThrow(/network/i);
   });
 });

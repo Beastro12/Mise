@@ -71,25 +71,39 @@ function parseCsv(text: string): Record<string, string>[] {
   });
 }
 
-export function parseOura(text: string): DailyHealth[] {
+const hasEnergy = (rows: unknown[]) =>
+  rows.some((r) => r && typeof r === "object" && Object.keys(r).some((k) => TOTAL.includes(norm(k)) || ACTIVE.includes(norm(k))));
+
+export function parseOuraDetailed(text: string): { days: DailyHealth[]; columns: string[]; rows: number } {
   const t = text.replace(/^﻿/, "").trim();
-  let rows: Record<string, unknown>[] = [];
+  let rows: unknown[] = [];
   if (t.startsWith("{") || t.startsWith("[")) {
     const json = JSON.parse(t) as unknown;
     if (Array.isArray(json)) rows = json;
     else if (json && typeof json === "object") {
-      const o = json as Record<string, unknown>;
-      const arr = o.data ?? o.daily_activity ?? o.activity;
-      if (Array.isArray(arr)) rows = arr;
+      const arrays = Object.values(json as Record<string, unknown>).filter(Array.isArray) as unknown[][];
+      rows = arrays.find(hasEnergy) ?? arrays[0] ?? [];
     }
   } else {
     rows = parseCsv(t);
   }
+  const columns: string[] = [];
   const byDay = new Map<string, DailyHealth>();
   for (const r of rows) {
     if (!r || typeof r !== "object") continue;
-    const d = toDaily(r);
+    for (const k of Object.keys(r)) if (!columns.includes(k)) columns.push(k);
+    const d = toDaily(r as Record<string, unknown>);
     if (d) byDay.set(d.day, d); // last row for a day wins
   }
-  return [...byDay.values()].sort((a, b) => (a.day < b.day ? 1 : -1));
+  const days = [...byDay.values()].sort((a, b) => (a.day < b.day ? 1 : -1));
+  return { days, columns, rows: rows.length };
+}
+
+export function parseOura(text: string): DailyHealth[] {
+  return parseOuraDetailed(text).days;
+}
+
+export function ouraEmptyMessage({ columns, rows }: { columns: string[]; rows: number }): string {
+  const shown = columns.slice(0, 8).join(", ") + (columns.length > 8 ? "…" : "");
+  return `No daily energy found. Columns seen: ${shown} (${rows} rows)`;
 }

@@ -54,6 +54,8 @@ export class AppleHealthParser {
   /** day → [timestamp, kg] of the latest weight */
   private weights = new Map<string, [string, number]>();
   records = 0;
+  /** Every record type seen, known or not. */
+  types = new Map<string, number>();
 
   push(chunk: string) {
     this.buf += chunk;
@@ -78,6 +80,7 @@ export class AppleHealthParser {
 
   private record(tag: string) {
     const type = attr(tag, "type");
+    if (type) this.types.set(type, (this.types.get(type) ?? 0) + 1);
     const kind = type ? TYPES[type as keyof typeof TYPES] : undefined;
     if (!kind) return;
     const value = parseFloat(attr(tag, "value") ?? "");
@@ -125,6 +128,13 @@ export class AppleHealthParser {
     }
     return out.sort((a, b) => (a.day < b.day ? 1 : -1));
   }
+}
+
+export function appleEmptyMessage(parser: { types: Map<string, number> }): string {
+  const all = [...parser.types.entries()];
+  const total = all.reduce((n, [, c]) => n + c, 0);
+  const top = all.sort((a, b) => b[1] - a[1]).slice(0, 5).map(([t, c]) => `${t} (${c})`);
+  return `Read ${total} records; types seen: ${top.length ? top.join(", ") : "none"}`;
 }
 
 /** Parse a whole export from a stream of text chunks. */

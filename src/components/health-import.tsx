@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { importHealthAction, syncOuraAction } from "@/app/actions/nutrition";
-import { AppleHealthParser, type DailyHealth } from "@/lib/health/apple";
-import { parseOura } from "@/lib/health/oura";
+import { AppleHealthParser, appleEmptyMessage, type DailyHealth } from "@/lib/health/apple";
+import { ouraEmptyMessage, parseOuraDetailed } from "@/lib/health/oura";
 import { decodeTextStream, zipEntryText } from "@/lib/health/zip";
 import { Button, Field, cx, inputCls } from "./ui";
 
@@ -17,7 +17,7 @@ function sinceDate(): string {
   return d.toISOString().slice(0, 10);
 }
 
-async function readApple(file: File, onProgress: (pct: number) => void): Promise<DailyHealth[]> {
+async function readApple(file: File, onProgress: (pct: number) => void): Promise<{ days: DailyHealth[]; parser: AppleHealthParser }> {
   let stream: ReadableStream<string> | null;
   let total = file.size;
   if (/\.zip$/i.test(file.name) || file.type.includes("zip")) {
@@ -37,7 +37,7 @@ async function readApple(file: File, onProgress: (pct: number) => void): Promise
     read += value.length;
     onProgress(total ? Math.min(99, Math.round((read / total) * 100)) : -parser.records);
   }
-  return parser.result(sinceDate());
+  return { days: parser.result(sinceDate()), parser };
 }
 
 export function HealthImport({ ouraReady }: { ouraReady: boolean }) {
@@ -64,8 +64,11 @@ export function HealthImport({ ouraReady }: { ouraReady: boolean }) {
   const onApple = (file: File | undefined) => {
     if (!file) return;
     run("Reading Apple Health…", async () => {
-      const days = await readApple(file, (p) => setBusy(p >= 0 ? `Reading Apple Health… ${p} %` : `Reading Apple Health… ${(-p).toLocaleString()} records`));
-      if (!days.length) return { ok: false, message: "No energy, steps or weight records found in the last 120 days." };
+      const { days, parser } = await readApple(file, (p) => setBusy(p >= 0 ? `Reading Apple Health… ${p} %` : `Reading Apple Health… ${(-p).toLocaleString()} records`));
+      if (!days.length) {
+        const all = parser.result();
+        return { ok: false, message: all.length ? "No energy, steps or weight records found in the last 120 days (all older than 120 days)." : appleEmptyMessage(parser) };
+      }
       setBusy("Saving…");
       return importHealthAction("apple", days);
     });
@@ -74,8 +77,16 @@ export function HealthImport({ ouraReady }: { ouraReady: boolean }) {
   const onOura = (file: File | undefined) => {
     if (!file) return;
     run("Reading Oura file…", async () => {
-      const days = parseOura(await file.text()).filter((d) => d.day >= sinceDate());
-      if (!days.length) return { ok: false, message: "No daily activity rows found. Expected columns like day, total_calories, active_calories, steps." };
+      const parsed = parseOuraDetailed(await file.text());
+      const days = parsed.days.filter((d) => d.day >= sinceDate());
+      if (!days.length) {
+        return {
+          ok: false,
+          message: parsed.days.length
+            ? "No daily activity rows found. Expected columns like day, total_calories, active_calories, steps (all older than 120 days)."
+            : `${ouraEmptyMessage(parsed)}. Expected columns like day, total_calories, active_calories, steps.`,
+        };
+      }
       return importHealthAction("oura", days);
     });
   };
