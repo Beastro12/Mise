@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { addEntry, getProfile, listEntries, listHealth, recentFoods, saveHealthDays, setProfile, weekView } from "@/lib/services/nutrition";
 import { DEFAULT_PROFILE } from "@/lib/domain/nutrition";
+import { assertMigrationsPresent } from "@/db";
 
 // Real services against a throwaway embedded Postgres (migrated + seeded on first use).
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "aitta-food-"));
@@ -54,5 +55,21 @@ describe("calorie tracker against the database", () => {
     // 1650 kcal/day is already under that target, so the plan keeps the usual meals.
     expect(v.plan!.dailyCut).toBe(0);
     expect(v.plan!.days.every((d) => d.kcal === 1650)).toBe(true);
+  });
+});
+
+describe("assertMigrationsPresent", () => {
+  it("names the folder and DB_AUTO_MIGRATE when drizzle/ is missing", () => {
+    const empty = fs.mkdtempSync(path.join(os.tmpdir(), "aitta-nomig-"));
+    try {
+      expect(() => assertMigrationsPresent(empty)).toThrow(/drizzle\//);
+      expect(() => assertMigrationsPresent(empty)).toThrow(/DB_AUTO_MIGRATE/);
+    } finally {
+      fs.rmSync(empty, { recursive: true, force: true });
+    }
+  });
+
+  it("accepts the repo's drizzle/ folder", () => {
+    expect(() => assertMigrationsPresent(path.join(process.cwd(), "drizzle"))).not.toThrow();
   });
 });
