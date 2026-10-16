@@ -30,6 +30,7 @@ Everything that needs you, in order. The code side is done. Tick these off once.
   | `OURA_ACCESS_TOKEN` | optional: Oura token for **Sync Oura** (the Oura file import works without it) |
 
 - [ ] Deploy, then open the address Vercel gives you (e.g. `https://mise-xxxx.vercel.app`).
+- [ ] Check the deploy: open `<your-app>/api/health`. Expect `"ok":true` and `"food_entries":true,"health_days":true`. If not, follow the `hint` in the response.
 
 ## 4. Phones
 - [ ] On each phone, open the address, log in with the passcode, then Share → **Add to Home Screen** (iPhone Safari) or ⋮ → **Install app** (Android Chrome).
