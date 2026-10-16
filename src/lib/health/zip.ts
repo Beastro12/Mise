@@ -2,7 +2,8 @@
  * Read one file out of a .zip without loading the whole archive: the central
  * directory gives the entry's offset, and the entry is inflated as a stream
  * (DecompressionStream "deflate-raw", in browsers and Node 18+). Handles ZIP64,
- * which large Apple Health exports use.
+ * which large Apple Health exports use. Older iOS Safari lacks TextDecoderStream
+ * (falls back to TextDecoder) and may lack "deflate-raw" (friendly error).
  */
 
 const u16 = (v: DataView, o: number) => v.getUint16(o, true);
@@ -71,6 +72,38 @@ async function centralDirectory(blob: Blob): Promise<Entry[]> {
   return entries;
 }
 
+const NO_INFLATE =
+  "This iPhone can't unzip in the browser. Update iOS (16.4+) or, in Files, tap export.zip to unzip it and pick apple_health_export/export.xml here.";
+
+function inflateRaw(raw: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
+  if (typeof DecompressionStream === "undefined") throw new Error(NO_INFLATE);
+  try {
+    return raw.pipeThrough(new DecompressionStream("deflate-raw") as unknown as TransformStream<Uint8Array, Uint8Array>);
+  } catch {
+    throw new Error(NO_INFLATE);
+  }
+}
+
+/** UTF-8 decode a byte stream; uses TextDecoder when TextDecoderStream is missing. */
+export function decodeTextStream(bytes: ReadableStream<Uint8Array>): ReadableStream<string> {
+  if (typeof TextDecoderStream !== "undefined") {
+    return bytes.pipeThrough(new TextDecoderStream() as unknown as TransformStream<Uint8Array, string>);
+  }
+  const dec = new TextDecoder("utf-8");
+  return bytes.pipeThrough(
+    new TransformStream<Uint8Array, string>({
+      transform(chunk, controller) {
+        const s = dec.decode(chunk, { stream: true });
+        if (s) controller.enqueue(s);
+      },
+      flush(controller) {
+        const s = dec.decode();
+        if (s) controller.enqueue(s);
+      },
+    }),
+  );
+}
+
 /** Text stream of the first entry whose name matches, or null. */
 export async function zipEntryText(blob: Blob, match: (name: string) => boolean): Promise<ReadableStream<string> | null> {
   const entry = (await centralDirectory(blob)).find((e) => match(e.name));
@@ -80,8 +113,8 @@ export async function zipEntryText(blob: Blob, match: (name: string) => boolean)
   const dataStart = entry.offset + 30 + u16(local, 26) + u16(local, 28);
   const raw = blob.slice(dataStart, dataStart + entry.compSize).stream();
   let bytes: ReadableStream<Uint8Array>;
-  if (entry.method === 8) bytes = raw.pipeThrough(new DecompressionStream("deflate-raw") as unknown as TransformStream<Uint8Array, Uint8Array>);
+  if (entry.method === 8) bytes = inflateRaw(raw);
   else if (entry.method === 0) bytes = raw;
   else throw new Error(`Unsupported compression in .zip (method ${entry.method}).`);
-  return bytes.pipeThrough(new TextDecoderStream() as unknown as TransformStream<Uint8Array, string>);
+  return decodeTextStream(bytes);
 }

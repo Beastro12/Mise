@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { importHealthAction, syncOuraAction } from "@/app/actions/nutrition";
 import { AppleHealthParser, type DailyHealth } from "@/lib/health/apple";
 import { parseOura } from "@/lib/health/oura";
-import { zipEntryText } from "@/lib/health/zip";
+import { decodeTextStream, zipEntryText } from "@/lib/health/zip";
 import { Button, Field, cx, inputCls } from "./ui";
 
 /** Only recent days are sent: plenty for weekly averages, and keeps the request small. */
@@ -25,7 +25,7 @@ async function readApple(file: File, onProgress: (pct: number) => void): Promise
     if (!stream) throw new Error("No export.xml inside this .zip. Pick the export.zip from Health → profile → Export All Health Data.");
     total = 0; // inflated size unknown; show record count instead
   } else {
-    stream = file.stream().pipeThrough(new TextDecoderStream() as unknown as TransformStream<Uint8Array, string>);
+    stream = decodeTextStream(file.stream());
   }
   const parser = new AppleHealthParser();
   const reader = stream.getReader();

@@ -1,8 +1,8 @@
 import zlib from "node:zlib";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppleHealthParser, parseAppleHealthStream } from "@/lib/health/apple";
 import { parseOura } from "@/lib/health/oura";
-import { zipEntryText } from "@/lib/health/zip";
+import { decodeTextStream, zipEntryText } from "@/lib/health/zip";
 
 const rec = (type: string, value: number | string, start: string, extra = 'sourceName="Apple Watch" unit="kcal"', selfClose = true) =>
   `<Record type="HKQuantityTypeIdentifier${type}" ${extra} creationDate="${start}" startDate="${start}" endDate="${start}" value="${value}"${selfClose ? "/>" : `>\n  <MetadataEntry key="HKWasUserEntered" value="1"/>\n </Record>`}`;
@@ -160,5 +160,47 @@ describe("export.zip", () => {
   it("returns null when the file isn't there and rejects non-zips", async () => {
     expect(await zipEntryText(toBlob(buildZip(files.slice(0, 1))), isExport)).toBeNull();
     await expect(zipEntryText(toBlob(Buffer.from("not a zip at all, just text")), isExport)).rejects.toThrow(/zip/);
+  });
+
+  describe("older Safari fallbacks", () => {
+    afterEach(() => vi.unstubAllGlobals());
+
+    it("decodes multi-byte characters split at any byte without TextDecoderStream", async () => {
+      vi.stubGlobal("TextDecoderStream", undefined);
+      const bytes = new TextEncoder().encode("ä€");
+      expect(bytes.length).toBe(5);
+      for (let i = 0; i <= bytes.length; i++) {
+        const s = new ReadableStream<Uint8Array>({
+          start(c) {
+            c.enqueue(bytes.slice(0, i));
+            c.enqueue(bytes.slice(i));
+            c.close();
+          },
+        });
+        expect(await readAll(decodeTextStream(s))).toBe("ä€");
+      }
+    });
+
+    it("reads the zip without TextDecoderStream", async () => {
+      vi.stubGlobal("TextDecoderStream", undefined);
+      const s = await zipEntryText(toBlob(buildZip(files)), isExport);
+      const { days } = await parseAppleHealthStream(s!);
+      expect(days).toEqual(expected);
+    });
+
+    it("explains when deflate-raw is unavailable", async () => {
+      class Broken {
+        constructor() {
+          throw new TypeError("Unsupported compression format");
+        }
+      }
+      for (const stub of [Broken, undefined]) {
+        vi.stubGlobal("DecompressionStream", stub);
+        const err = await zipEntryText(toBlob(buildZip(files)), isExport).catch((e) => e);
+        expect(err).toBeInstanceOf(Error);
+        expect(err).not.toBeInstanceOf(TypeError);
+        expect(err.message).toMatch(/export\.xml/);
+      }
+    });
   });
 });
