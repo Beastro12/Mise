@@ -13,6 +13,15 @@ const state: DbState = (g.__aittaDb ??= { promise: null, close: null });
 
 const migrationsFolder = path.join(process.cwd(), "drizzle");
 
+/** Fails with a clear error when the bundled drizzle/ folder is missing at runtime. */
+export function assertMigrationsPresent(folder: string): void {
+  if (!fs.existsSync(path.join(folder, "meta", "_journal.json"))) {
+    throw new Error(
+      `Migrations folder drizzle/ not found at ${folder} (needed for DB_AUTO_MIGRATE=1 and local PGlite); check outputFileTracingIncludes in next.config.ts`,
+    );
+  }
+}
+
 async function createDb(): Promise<DB> {
   const url = process.env.DATABASE_URL;
   if (url) {
@@ -24,6 +33,7 @@ async function createDb(): Promise<DB> {
     state.close = () => client.end();
     if (process.env.DB_AUTO_MIGRATE === "1") {
       const { migrate } = await import("drizzle-orm/postgres-js/migrator");
+      assertMigrationsPresent(migrationsFolder);
       await migrate(db, { migrationsFolder });
       await seedDatabase(db as unknown as DB);
     }
@@ -42,6 +52,7 @@ async function createDb(): Promise<DB> {
   const client = new PGlite(dataDir);
   const db = drizzle(client, { schema });
   state.close = () => client.close();
+  assertMigrationsPresent(migrationsFolder);
   await migrate(db, { migrationsFolder });
   await seedDatabase(db as unknown as DB);
   return db as unknown as DB;

@@ -22,6 +22,10 @@ export const config = {
   get blobStore(): "local" | "supabase" {
     return process.env.BLOB_STORE === "supabase" ? "supabase" : "local";
   },
+  /** Oura API v2 token for daily activity sync (optional; file import works without it). */
+  get ouraToken(): string | null {
+    return process.env.OURA_ACCESS_TOKEN?.trim() || null;
+  },
   /** Allow fetching private/loopback hosts on URL import (tests only). */
   get allowPrivateFetch(): boolean {
     return process.env.ALLOW_PRIVATE_FETCH === "1";

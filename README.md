@@ -8,6 +8,7 @@ A personal meal planner and shopping list for one household in Turku. It plans t
 - **Plan:** pick recipes yourself, or have a week proposed (no repeats from the last 2 weeks, protein variety, pantry items, this week's Lidl offers). You can swap one meal, lock meals and regenerate the rest, and mark meals cooked.
 - **List:** ingredients are merged across recipes (2 dl + 100 ml → 3 dl), and the pantry is subtracted. Staples trigger a "Have it?" question instead of being added. Pack counts come from the product you matched. Everything defaults to S-market and moves to Lidl only on a (cheaper) Lidl offer, with the reason shown. Sections follow each store's walking order. The checklist works offline, and checked items go to the pantry in one tap. Your spouse can use the same list through a share link.
 - **Icons:** each recipe shows its main protein (meat, chicken, fish, vegetarian, vegan) and time/effort (quick, slow, oven, soup).
+- **Calories:** log what you eat by meal (breakfast, lunch, dinner, snacks); foods you've logged before refill their portion and kcal. Energy burned comes from **Apple Health** (export.zip, read on the phone, only daily totals uploaded) or **Oura** (export CSV/JSON, or an API sync with `OURA_ACCESS_TOKEN`), else a Mifflin–St Jeor estimate. **Week & plan** summarises a logged week (per-meal split, deficit, kg/week) and plans the next week from your own meals, shrunk to a safe deficit (snacks first, ≤ 35 % off a meal, never under 1500/1200 kcal).
 - **Refills:** toilet paper, coffee, dish soap… each on its own "every N days" rhythm. Due items are suggested on the week's list.
 - **S-kaupat helpers (Mac):** `npm run match` saves real S-kaupat products for your ingredients (you open the product, it reads the page). `npm run cart` fills your S-kaupat cart from the list (2nd choice if sold out) and picks your preferred delivery slot. You log in and press order yourself. See [helper/README.md](helper/README.md). Their S-kaupat steps are **unverified**.
 - **Stores:** Lidl offers come from leaflet photos or pasted text. S-kaupat product data is a **mock** until the real site can be verified (see [DECISIONS.md](DECISIONS.md)).
@@ -45,6 +46,7 @@ To try it on your phone over wifi: `DEV_ORIGINS=192.168.x.y npm run dev -- -H 0.
 | `BLOB_STORE` | **`supabase` on Vercel** | `local` (`./.data/uploads`) or `supabase`. |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET` | with `BLOB_STORE=supabase` | Private bucket for recipe photos and files (default name `aitta-originals`). |
 | `S_MARKET_STORE`, `S_KAUPAT_STORE_ID` | no | Your S-market or Prisma (default: S-market Majakkaranta). Seeded once; editable later under More → Stores. |
+| `OURA_ACCESS_TOKEN` | no | Enables **Sync Oura** on Calories → Setup (Oura API v2 daily activity, **UNVERIFIED** live). File import works without it. |
 | `PGLITE_DIR`, `UPLOADS_DIR` | no | Local only: where the embedded database and uploaded files are kept (default `./.data/pglite`, `./.data/uploads`). |
 | `S_KAUPAT_ADAPTER` | no | `mock` (invented demo catalogue) or `none`. Default: `mock` in dev, `none` in production. |
 
@@ -87,4 +89,6 @@ Schema changes later: edit `src/db/schema.ts`, run `npm run db:generate`, commit
 - Unit handling is deliberately conservative: `1 tlk tomaattimurskaa` and `400 g tomaattimurskaa` stay as two lines, because a can size isn't assumed.
 - The partitive → nominative heuristic for unknown Finnish words is best effort. Fix names in review; corrections are saved as synonyms for new terms.
 - Spouse sync polls every 4 s rather than using realtime push.
-- No nutrition, no barcode scanning, no expiry dates, no other chains (out of scope).
+- **Calories are what you type.** There is no food database or barcode scanning; recipes have no nutrition data. A food's kcal is remembered from the last time you logged it.
+- **Oura API sync was not run live** (no token in the build environment), and Oura's own docs disagree on whether personal access tokens still work. The export-file import is the dependable path; Oura's export column names are matched loosely (DECISIONS D41).
+- No barcode scanning, no expiry dates, no other chains (out of scope).

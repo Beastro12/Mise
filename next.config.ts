@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1", ...(process.env.DEV_ORIGINS?.split(",").map((s) => s.trim()).filter(Boolean) ?? [])],
   // Native/WASM and Node-only libraries stay out of the server bundle.
   serverExternalPackages: ["@electric-sql/pglite", "postgres", "mammoth", "unpdf"],
+  // The runtime migrator reads drizzle/ from process.cwd(), so trace it into every route's output.
+  outputFileTracingIncludes: { "/*": ["./drizzle/**/*"] },
   async headers() {
     return [
       {

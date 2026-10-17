@@ -9,6 +9,7 @@ const TABS: Array<{ href: string; label: string; icon: IconName }> = [
   { href: "/recipes", label: "Recipes", icon: "recipes" },
   { href: "/list", label: "List", icon: "list" },
   { href: "/pantry", label: "Pantry", icon: "pantry" },
+  { href: "/food", label: "Calories", icon: "food" },
   { href: "/more", label: "More", icon: "more" },
 ];
 
@@ -26,7 +27,7 @@ export function BottomNav() {
                 href={t.href}
                 className={`flex flex-col items-center gap-0.5 pt-2 pb-2 text-[11px] font-semibold ${active ? "text-primary" : "text-muted"}`}
               >
-                <span className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors ${active ? "bg-chanterelle-soft" : ""}`}>
+                <span className={`flex h-8 w-12 items-center justify-center rounded-full transition-colors ${active ? "bg-chanterelle-soft" : ""}`}>
                   <Icon name={t.icon} className="h-[22px] w-[22px]" strokeWidth={active ? 1.9 : 1.5} />
                 </span>
                 {t.label}
