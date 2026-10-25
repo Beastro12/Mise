@@ -57,6 +57,8 @@ Postgres (Supabase in production; embedded PGlite for zero-setup local dev/tests
 | `meal_plans` | week_start, default_servings, mode, propose params |
 | `planned_meals` | plan_id, recipe_id, servings, day, locked, reason, cooked_at (history) |
 | `shopping_lists` | plan_id, share_token, version (bumped on every change → spouse polling) |
+| `food_entries` | day, meal (breakfast/lunch/dinner/snack), name, portion text, kcal, protein_g?, recipe_id? |
+| `health_days` | (day, source apple/oura) → active_kcal, basal_kcal, total_kcal, steps, weight_kg, intake_kcal |
 | `shopping_items` | name_fi, display_name, quantity, unit, section, store_id, store_reason, store_overridden, product_id, packs, price, offer_id, sources jsonb, state (none/ask/covered/have), note, manual, checked, moved_to_pantry |
 
 ## Core algorithms (pure functions, unit tested)
@@ -70,6 +72,7 @@ Postgres (Supabase in production; embedded PGlite for zero-setup local dev/tests
 7. **Packs**: ceil(need / pack size) when the mapped product's pack size is in a compatible dimension.
 8. **Sections**: group by store, then by that store's section order.
 9. **Propose**: filter (tags, not cooked or planned in the last 14 days, weekday time limit) → greedy scoring (Lidl-offer main ingredients, pantry use, protein variety, seeded jitter) → one-line reason. Locked meals are kept; "give me another" re-rolls one slot.
+10. **Calories** (`domain/nutrition.ts`): burn per day = one source, never summed (Apple resting + active → Oura total → profile estimate); target = burn − deficit, deficit ≤ 25 % of burn and ≤ 1000, intake ≥ 1500 ♂ / 1200 ♀; the plan splits the cut across meals by size (snacks weighted ×2, ≤ 35 % off a main meal), then per day and meal picks one of your logged meals closest to its budget, scaled 50–100 %, rotating repeats.
 
 ## Milestones
 
