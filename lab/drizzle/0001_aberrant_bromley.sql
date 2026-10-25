@@ -1,1 +1,0 @@
-ALTER TABLE `lessons` ADD `pre_work_done_at` text;
