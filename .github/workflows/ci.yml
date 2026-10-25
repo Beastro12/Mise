@@ -28,6 +28,26 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  lab:
+    # lab/ is a separate app with its own dependencies and checks.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lab
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: lab/package-lock.json
+      - run: npm ci
+      - run: npx next typegen
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
   e2e:
     runs-on: ubuntu-latest
     steps:

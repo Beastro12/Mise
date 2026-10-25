@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Lab is a separate app in lab/ with its own toolchain and lint config.
+    "lab/**",
   ]),
 ]);
 
