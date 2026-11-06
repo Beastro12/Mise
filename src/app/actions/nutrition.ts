@@ -17,18 +17,24 @@ function revalidate() {
   revalidatePath("/food", "layout");
 }
 
-export async function addFoodAction(formData: FormData) {
+/** Returns the problem as a message: production builds hide the text of thrown errors. */
+export async function addFoodAction(formData: FormData): Promise<{ ok: boolean; message?: string }> {
   await requireAuth();
-  await addEntry({
-    day: str(formData, "day"),
-    meal: str(formData, "meal") as MealSlot,
-    name: str(formData, "name"),
-    portion: str(formData, "portion") || null,
-    kcal: num(formData, "kcal") ?? NaN,
-    proteinG: num(formData, "protein"),
-    recipeId: str(formData, "recipeId") || null,
-  });
+  try {
+    await addEntry({
+      day: str(formData, "day"),
+      meal: str(formData, "meal") as MealSlot,
+      name: str(formData, "name"),
+      portion: str(formData, "portion") || null,
+      kcal: num(formData, "kcal") ?? NaN,
+      proteinG: num(formData, "protein"),
+      recipeId: str(formData, "recipeId") || null,
+    });
+  } catch (e) {
+    return { ok: false, message: (e as Error).message };
+  }
   revalidate();
+  return { ok: true };
 }
 
 export async function deleteFoodAction(formData: FormData) {
@@ -66,14 +72,21 @@ export async function saveProfileAction(formData: FormData) {
   revalidate();
 }
 
+// A value outside sane daily bounds (negative, or too big for the database) becomes "no data"
+// for that day, so one bad record doesn't sink a whole year's import.
+const bounded = (max: number, min = 0) =>
+  z
+    .number()
+    .nullable()
+    .transform((v) => (v == null || !Number.isFinite(v) || v < min || v > max ? null : v));
 const DaySchema = z.object({
   day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  activeKcal: z.number().nullable(),
-  basalKcal: z.number().nullable(),
-  totalKcal: z.number().nullable(),
-  steps: z.number().nullable(),
-  weightKg: z.number().nullable(),
-  intakeKcal: z.number().nullable(),
+  activeKcal: bounded(20_000),
+  basalKcal: bounded(20_000),
+  totalKcal: bounded(20_000),
+  steps: bounded(200_000),
+  weightKg: bounded(400, 20),
+  intakeKcal: bounded(20_000),
 });
 
 /** Daily totals parsed in the browser from an Apple Health or Oura export. */

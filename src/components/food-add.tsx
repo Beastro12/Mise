@@ -3,7 +3,8 @@
 import { useState } from "react";
 import type { MealSlot } from "@/db/schema";
 import { addFoodAction } from "@/app/actions/nutrition";
-import { Button, Field, cx, inputCls } from "./ui";
+import { Field, btn, cx, inputCls } from "./ui";
+import { SubmitButton } from "./submit-button";
 
 type Recent = { name: string; portion: string | null; kcal: number; meal: MealSlot };
 const MEAL_OPTIONS: Array<[MealSlot, string]> = [
@@ -19,6 +20,7 @@ export function FoodAdd({ day, defaultMeal, recent, recipes }: { day: string; de
   const [portion, setPortion] = useState("");
   const [kcal, setKcal] = useState("");
   const [recipeId, setRecipeId] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const onName = (v: string) => {
     setName(v);
@@ -35,7 +37,13 @@ export function FoodAdd({ day, defaultMeal, recent, recipes }: { day: string; de
   return (
     <form
       action={async (fd) => {
-        await addFoodAction(fd);
+        // Keep what was typed and say what's wrong (e.g. "Calories must be between 0 and 10000.").
+        const res = await addFoodAction(fd).catch(() => ({ ok: false, message: "Couldn't save that. Check the connection and try again." }));
+        if (!res.ok) {
+          setError(res.message ?? "Couldn't save that. Try again.");
+          return;
+        }
+        setError(null);
         setName("");
         setPortion("");
         setKcal("");
@@ -81,9 +89,14 @@ export function FoodAdd({ day, defaultMeal, recent, recipes }: { day: string; de
           <input name="kcal" required inputMode="numeric" value={kcal} onChange={(e) => setKcal(e.target.value)} className={inputCls} data-testid="food-kcal" />
         </Field>
       </div>
-      <Button type="submit" data-testid="food-add">
+      {error ? (
+        <p className="text-sm text-danger" role="alert" data-testid="food-error">
+          {error}
+        </p>
+      ) : null}
+      <SubmitButton className={btn.primary} pendingText="Saving…" data-testid="food-add">
         Log it
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

@@ -15,10 +15,12 @@ const short = (day: string) => {
 
 export default async function FoodSetupPage() {
   const today = todayHelsinki();
-  const [profile, health, weight] = await Promise.all([getProfile(), listHealth(addDays(today, -13), today), latestWeight()]);
+  const [profile, health, weight] = await Promise.all([getProfile(), listHealth(addDays(today, -14), addDays(today, -1)), latestWeight()]);
   const days = [...new Set(health.map((h) => h.day))];
   const burns = days.map((d) => ({ day: d, rows: health.filter((h) => h.day === d), burn: dailyBurn(health.filter((h) => h.day === d), profile) }));
-  const avgBurn = burns.length ? Math.round(burns.reduce((s, b) => s + b.burn.kcal, 0) / burns.length) : estimatedTdee(profile);
+  // Only days whose burn really came from a tracker (not the profile estimate); today is partial, so excluded above.
+  const tracked = burns.filter((b) => b.burn.source !== "estimate");
+  const avgBurn = tracked.length ? Math.round(tracked.reduce((s, b) => s + b.burn.kcal, 0) / tracked.length) : estimatedTdee(profile);
   const t = deficitTarget(avgBurn, profile);
 
   return (
@@ -85,7 +87,9 @@ export default async function FoodSetupPage() {
           </div>
         </dl>
         <p className="mt-2 text-xs text-muted">
-          {burns.length ? `Burn is the average of ${burns.length} day${burns.length === 1 ? "" : "s"} of tracker data.` : "Burn is estimated from the profile (no tracker data in the last 14 days)."}
+          {tracked.length
+            ? `Burn is the average of ${tracked.length} full day${tracked.length === 1 ? "" : "s"} of tracker data.`
+            : "Burn is estimated from the profile (no tracker data in use for the last 14 full days)."}
           {t.limitedBy ? ` Deficit ${t.limitedBy}.` : ""}
         </p>
       </Card>

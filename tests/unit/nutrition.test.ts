@@ -60,7 +60,9 @@ describe("deficit target", () => {
   it("never targets below 1500 (men) / 1200 (women)", () => {
     expect(deficitTarget(1700, me)).toMatchObject({ target: 1500, deficit: 200 });
     expect(deficitTarget(1300, { ...me, sex: "female" })).toMatchObject({ target: 1200, deficit: 100 });
-    expect(deficitTarget(1100, { ...me, sex: "female" })).toMatchObject({ target: 1100, deficit: 0 });
+    // Burning less than the floor: the target stays at the floor (no deficit), never below it.
+    expect(deficitTarget(1100, { ...me, sex: "female" })).toMatchObject({ target: 1200, deficit: 0 });
+    expect(deficitTarget(1400, me).limitedBy).toMatch(/no deficit/);
   });
 });
 
@@ -148,6 +150,26 @@ describe("deficit plan", () => {
     const snack = plan.days[0].meals.find((m) => m.meal === "snack")!;
     expect(snack.factor).toBeLessThan(1);
     expect(snack.items[0].portion).toMatch(/^\d+ g$/);
+  });
+
+  it("plans an occasional meal only on about as many days as you eat it, and meets the target on average", () => {
+    const d7 = ["2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06", "2026-11-07", "2026-11-08"];
+    const sparse = d7.flatMap((day): FoodEntry[] => [
+      { day, meal: "lunch", name: "Keitto", portion: "300 g", kcal: 700 },
+      { day, meal: "dinner", name: "Pasta", portion: "350 g", kcal: 800 },
+    ]);
+    sparse.push({ day: d7[0], meal: "breakfast", name: "Puuro", portion: "3 dl", kcal: 400 }, { day: d7[3], meal: "breakfast", name: "Puuro", portion: "3 dl", kcal: 400 });
+    sparse.push({ day: d7[5], meal: "snack", name: "Pulla", portion: "1 kpl", kcal: 350 });
+    const avg = (p: ReturnType<typeof planDeficitWeek>) => p.days.reduce((s, d) => s + d.kcal, 0) / p.days.length;
+    const count = (p: ReturnType<typeof planDeficitWeek>, m: string) => p.days.filter((d) => d.meals.some((x) => x.meal === m && x.template)).length;
+
+    const cut = planDeficitWeek({ startDay: "2026-11-09", entries: sparse, loggedDays: 7, target: 1400 });
+    expect(cut.usualIntake).toBe(1664);
+    expect(count(cut, "breakfast")).toBe(2); // eaten on 2 of 7 logged days
+    expect(Math.abs(avg(cut) - 1400)).toBeLessThan(30); // the deficit is delivered (was ~1650/day)
+
+    const keep = planDeficitWeek({ startDay: "2026-11-09", entries: sparse, loggedDays: 7, target: 5000 });
+    expect(Math.abs(avg(keep) - 1664)).toBeLessThan(5); // usual portions really are usual (was ~2250/day)
   });
 
   it("keeps usual portions when you're already under the target", () => {

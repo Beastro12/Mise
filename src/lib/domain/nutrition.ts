@@ -108,9 +108,12 @@ export function deficitTarget(burn: number, p: Pick<Profile, "sex" | "deficitKca
   }
   if (burn - deficit < floor) {
     deficit = Math.max(0, burn - floor);
-    limitedBy = `intake kept at or above ${floor} kcal/day`;
+    limitedBy =
+      burn <= floor
+        ? `intake kept at ${floor} kcal/day, the minimum; that is about what you burn, so there is no deficit`
+        : `intake kept at or above ${floor} kcal/day`;
   }
-  return { target: Math.round(burn - deficit), deficit, limitedBy };
+  return { target: Math.max(floor, Math.round(burn - deficit)), deficit, limitedBy };
 }
 
 // ---------------------------------------------------------------------------
@@ -304,7 +307,13 @@ export function planDeficitWeek(input: { startDay: string; entries: FoodEntry[];
   const templates = mealTemplates(input.entries);
   const notes: string[] = [];
   const n = Math.max(1, input.loggedDays);
+  const planDays = input.days ?? 7;
   const perMeal = Object.fromEntries(MEALS.map((m) => [m, Math.round(input.entries.filter((e) => e.meal === m).reduce((s, e) => s + e.kcal, 0) / n)])) as Record<MealSlot, number>;
+  // How often each meal is eaten: a breakfast on 2 of 7 logged days goes on ~2 plan days, not 7.
+  const share = Object.fromEntries(MEALS.map((m) => [m, Math.min(1, new Set(input.entries.filter((e) => e.meal === m).map((e) => e.day)).size / n)])) as Record<MealSlot, number>;
+  const slotDays = Object.fromEntries(MEALS.map((m) => [m, share[m] > 0 ? Math.max(1, Math.round(planDays * share[m])) : 0])) as Record<MealSlot, number>;
+  /** Spread k occurrences evenly over the plan's days. */
+  const onDay = (m: MealSlot, i: number) => Math.floor(((i + 1) * slotDays[m]) / planDays) > Math.floor((i * slotDays[m]) / planDays);
   const usual = MEALS.reduce((s, m) => s + perMeal[m], 0);
   const cut = Math.max(0, usual - input.target);
   if (usual <= input.target) notes.push(`Your logged days already average ${usual} kcal, at or under the ${input.target} kcal target, so the plan keeps your usual portions.`);
@@ -314,11 +323,14 @@ export function planDeficitWeek(input: { startDay: string; entries: FoodEntry[];
 
   const used = new Map<string, number>();
   const days: PlannedDay[] = [];
-  for (let i = 0; i < (input.days ?? 7); i++) {
+  let floored = false;
+  for (let i = 0; i < planDays; i++) {
     const day = addDays(input.startDay, i);
     const meals: PlannedMeal[] = [];
     for (const meal of MEALS) {
-      const budget = budgets[meal];
+      if (slotDays[meal] < planDays && !onDay(meal, i)) continue; // not a day you usually eat this meal
+      // Budgets are per average day; on the days the meal is eaten it carries that whole share.
+      const budget = share[meal] > 0 ? Math.round(budgets[meal] / share[meal]) : 0;
       const options = templates.filter((t) => t.meal === meal);
       if (budget <= 0 || !options.length) {
         if (perMeal[meal] > 0) meals.push({ meal, budget: 0, template: null, factor: 0, kcal: 0, items: [] });
@@ -337,6 +349,7 @@ export function planDeficitWeek(input: { startDay: string; entries: FoodEntry[];
         })
         .sort((a, b) => a.score - b.score);
       const { t, factor } = scored[0];
+      if (cut > 0 && t.kcal * MIN_FACTOR > budget * 1.05) floored = true;
       const f = Math.round(factor * 20) / 20; // 5 % steps read better than 0.83
       used.set(t.key, (used.get(t.key) ?? 0) + 1);
       const items = t.items.map((it) => ({ name: it.name, portion: scalePortion(it.portion, f), kcal: Math.round(it.kcal * (t.kcal / t.items.reduce((s, x) => s + x.kcal, 0)) * f), recipeId: it.recipeId ?? null }));
@@ -344,5 +357,10 @@ export function planDeficitWeek(input: { startDay: string; entries: FoodEntry[];
     }
     days.push({ day, target: input.target, meals, kcal: meals.reduce((s, m) => s + m.kcal, 0) });
   }
+  const planAvg = Math.round(days.reduce((s, d) => s + d.kcal, 0) / Math.max(1, days.length));
+  if (floored) notes.push("Some meals can't shrink to their budget without going under half a portion, so they stay at half.");
+  if (cut > 0 && planAvg > input.target + 50) notes.push(`This plan averages ${planAvg} kcal/day, above the ${input.target} kcal target: your logged meals can't be cut further without changing what you eat.`);
+  else if (slotDays.breakfast < planDays || slotDays.lunch < planDays || slotDays.dinner < planDays || (slotDays.snack > 0 && slotDays.snack < planDays))
+    notes.push(`Days differ because some meals are only on the days you usually eat them; the week averages ${planAvg} kcal/day.`);
   return { days, usualIntake: usual, dailyCut: cut - uncut, budgets, uncut, notes };
 }
