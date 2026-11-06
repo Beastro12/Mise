@@ -14,4 +14,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - **Don't start a different project here**, not even in a subfolder. If the task is a new or unrelated app (a video pipeline, a learning app, …), stop and ask the owner to create a separate GitHub repository for it, then work there.
 - New *features of Aitta* (e.g. a new tab) belong here, on a feature branch with a PR.
-- Other projects that were started here by mistake have moved: `edu_video` → `Beastro12/edu_video`, Lab → `Beastro12/lab`.
+- Other projects live in their own repositories: `edu_video` → `Beastro12/edu_video`, Lab → `Beastro12/AI-Learning-Lab`, Silta → `Beastro12/Silta`. Work on those happens there, never here.
