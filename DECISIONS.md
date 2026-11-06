@@ -198,7 +198,7 @@ S-kaupat's product data still can't be read from a server (D1), and no endpoint 
 - **Live Vercel cold start with `DB_AUTO_MIGRATE=1` (UNVERIFIED).** Not run on a real deployment. Only the local build trace was checked.
 - **Clear-error guard.** `assertMigrationsPresent(folder)` in `src/db/index.ts` runs before each `migrate(...)` (Postgres under `DB_AUTO_MIGRATE`, and PGlite). If `meta/_journal.json` is missing it throws an error naming `drizzle/` and `DB_AUTO_MIGRATE`. No advisory locks were added and seeding is unchanged.
 
-### D42. Calorie tracker review fixes
+### D43. Calorie tracker review fixes
 - **Plan meets its target.** The plan used each meal's average over *all* logged days (a breakfast eaten on 2 of 7 days counted as ~114 kcal/day), then put that meal on all 7 days, with the half-portion floor keeping each at 200+. A week like that planned ~1650 kcal/day against a 1400 target, and ~35 % above usual intake when no cut was needed. Now a meal goes on as many plan days as you eat it (2 of 7 → 2), at its real size on those days. A note gives the week's average when days differ, or says plainly when the target can't be reached. Covered by a regression test that fails on the old code.
 - **Intake floor holds.** When burn is below 1500 (men) / 1200 (women), the target is the floor and says there is no deficit. Before, it fell to the burn itself, below the floor it claimed to keep. The old test expected that wrong value and now matches its own title.
 - **Burn uses full days only.** Today's tracker totals are partial and lowered the average burn, which made the target stricter. They are now left out. The "tracker data" labels count only days whose burn came from a tracker, not the profile estimate.
