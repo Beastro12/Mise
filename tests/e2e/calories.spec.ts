@@ -91,3 +91,13 @@ test("calories: setup → import → log meals → week plan", async ({ page }) 
   expect(target).toBeLessThan(burned);
   await expect(page.locator('[data-testid="plan-meal"]', { hasText: /Testi/ }).first()).toBeVisible();
 });
+
+test("calories: a bad entry shows why and keeps what was typed", async ({ page }) => {
+  await login(page);
+  await page.goto("/food");
+  await page.fill('[data-testid="food-name"]', "Testikeksi");
+  await page.fill('[data-testid="food-kcal"]', "abc");
+  await page.click('[data-testid="food-add"]');
+  await expect(page.locator('[data-testid="food-error"]')).toContainText("Calories must be between 0 and 10000");
+  await expect(page.locator('[data-testid="food-name"]')).toHaveValue("Testikeksi");
+});

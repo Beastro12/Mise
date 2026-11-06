@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SubmitButton } from "@/components/submit-button";
 import { weekView } from "@/lib/services/nutrition";
 import { logPlannedAction } from "@/app/actions/nutrition";
 import { MEALS, MEAL_LABEL } from "@/lib/domain/nutrition";
@@ -29,7 +30,7 @@ export default async function FoodWeekPage(props: PageProps<"/food/week">) {
   const today = todayHelsinki();
   // Default: the last full week (the one you've finished logging).
   const start = mondayOf(typeof sp.start === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.start) ? sp.start : addDays(mondayOf(today), -7));
-  const { profile, summary, target, plan, healthDays } = await weekView(start);
+  const { profile, summary, target, plan, trackerDays } = await weekView(start);
   const planStart = addDays(start, 7);
 
   return (
@@ -56,7 +57,7 @@ export default async function FoodWeekPage(props: PageProps<"/food/week">) {
         <>
           <div className="grid grid-cols-2 gap-2.5" data-testid="week-stats">
             <Stat label="Eaten / day" value={`${summary.avgIntake}`} sub={`${summary.loggedDays} of 7 days logged`} />
-            <Stat label="Burned / day" value={`${summary.avgBurn}`} sub={healthDays ? "from your tracker data" : "estimated (no tracker data)"} />
+            <Stat label="Burned / day" value={`${summary.avgBurn}`} sub={trackerDays ? `tracker data on ${trackerDays} of 7 days` : "estimated (no tracker data)"} />
             <Stat label="Balance / day" value={signed(summary.avgBalance!)} sub={summary.avgBalance! < 0 ? "deficit" : "surplus"} />
             <Stat label="Weight / week" value={`${signed(summary.weeklyKg!)} kg`} sub="if every day were like this" />
           </div>
@@ -169,7 +170,9 @@ export default async function FoodWeekPage(props: PageProps<"/food/week">) {
                                 <input type="hidden" name="day" value={d.day} />
                                 <input type="hidden" name="meal" value={m.meal} />
                                 <input type="hidden" name="items" value={JSON.stringify(m.items)} />
-                                <button className={btn.small}>Ate this</button>
+                                <SubmitButton className={btn.small} pendingText="Saving…">
+                                  Ate this
+                                </SubmitButton>
                               </form>
                             ) : null}
                           </div>

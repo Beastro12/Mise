@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { sql } from "drizzle-orm";
+import { SESSION_COOKIE, authEnabled, verifySession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,15 @@ function rowsOf<T>(res: unknown): T[] {
   return Array.isArray(res) ? (res as T[]) : ((res as { rows?: T[] }).rows ?? []);
 }
 
-export async function GET() {
+/** The route is public (uptime checks); setup details are only for the logged-in owner. */
+function isOwner(req: Request): boolean {
+  if (!authEnabled()) return true;
+  const cookie = (req.headers.get("cookie") ?? "").split(/;\s*/).find((c) => c.startsWith(`${SESSION_COOKIE}=`));
+  return verifySession(cookie ? decodeURIComponent(cookie.slice(SESSION_COOKIE.length + 1)) : null);
+}
+
+export async function GET(req: Request) {
+  const owner = isOwner(req);
   const db = process.env.DATABASE_URL ? "postgres" : "pglite";
   try {
     const d = await getDb();
@@ -39,8 +48,10 @@ export async function GET() {
       ouraToken: Boolean(process.env.OURA_ACCESS_TOKEN),
       ...(ok ? {} : { hint: HINT }),
     };
-    return NextResponse.json(body, { status: ok ? 200 : 500 });
+    return NextResponse.json(owner ? body : { ok, ...(ok ? {} : { hint: HINT }) }, { status: ok ? 200 : 500 });
   } catch (e) {
-    return NextResponse.json({ ok: false, error: (e as Error).message, hint: HINT }, { status: 500 });
+    // The driver's message can name the database user or host: log it, never send it.
+    console.error("[health]", e);
+    return NextResponse.json({ ok: false, hint: HINT }, { status: 500 });
   }
 }

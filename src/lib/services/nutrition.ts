@@ -156,10 +156,13 @@ export async function syncOura(days = 30): Promise<number> {
 
 export async function weekView(monday: string) {
   const sunday = addDays(monday, 6);
-  const [profile, rows, health] = await Promise.all([getProfile(), listEntries(monday, sunday), listHealth(monday, sunday)]);
+  // Today's tracker totals are still partial (the day isn't over): leave them out of the burn.
+  const lastFull = addDays(todayHelsinki(), -1);
+  const [profile, rows, health] = await Promise.all([getProfile(), listEntries(monday, sunday), listHealth(monday, sunday < lastFull ? sunday : lastFull)]);
   const entries: FoodEntry[] = rows.map((r) => ({ ...r }));
   const summary = summarizeWeek(monday, entries, health, profile);
   const target = deficitTarget(summary.avgBurn, profile);
   const plan = summary.loggedDays ? planDeficitWeek({ startDay: addDays(monday, 7), entries, loggedDays: summary.loggedDays, target: target.target }) : null;
-  return { profile, summary, target, plan, healthDays: health.length };
+  const trackerDays = summary.days.filter((d) => d.burn.source !== "estimate").length;
+  return { profile, summary, target, plan, trackerDays };
 }
